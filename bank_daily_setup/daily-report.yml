@@ -1,0 +1,33 @@
+name: Daily Report
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 13 * * *' # 21:00 Asia/Shanghai (UTC+8)
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install beautifulsoup4
+      - name: Generate next-day report
+        run: python generate_report.py
+      - name: Publish report
+        run: |
+          FILE=$(python -c "from datetime import datetime,timedelta; from zoneinfo import ZoneInfo; d=datetime.now(ZoneInfo('Asia/Shanghai')).date()+timedelta(days=1); print(f'银行每日线报（{d.isoformat()}）.html')")
+          python publish_report.py "$FILE"
+      - name: Commit and push
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html latest.json
+          git add -- '银行每日线报（'*.html
+          if ! git diff --cached --quiet; then
+            git commit -m 'Publish next-day bank report'
+            git push
+          fi
