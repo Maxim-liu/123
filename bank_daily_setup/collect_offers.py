@@ -32,7 +32,7 @@ UTC = dt.timezone.utc
 SHANGHAI = ZoneInfo("Asia/Shanghai")
 USER_AGENT = "BankDailyPublicFeed/1.0 (+https://github.com/Maxim-liu/123)"
 FINANCIAL = re.compile(r"银行|銀行|信用卡|立减|立減|刷卡|还款|還款|云闪付|雲閃付|银联|銀聯|支付|返现|返現|回贈|獎賞|里數|积分|積分|开卡|開卡|办卡|迎新|工行|农行|建行|交行|招行|中行|邮储|浦发|广发|中信|光大|民生|华夏|滙豐|匯豐|恒生|渣打|中銀|東亞|大新|星展|\b(?:Chase|Amex|American Express|Citi|Wells Fargo|Bank(?:ing)?|credit.?cards?|checking|cash.?back|Membership Rewards|statement credit)\b", re.I)
-BENEFIT = re.compile(r"优惠|優惠|立减|立減|刷卡金|红包|紅包|返现|返現|回贈|獎賞|奖励|奖励|里數|积分|積分|福利|迎新|活动|活動|羊毛|gift|bonus|offer|cash.?back|credit|rebate|reward|\$|%|％", re.I)
+BENEFIT = re.compile(r"优惠|優惠|立减|立減|刷卡金|红包|紅包|返现|返現|回贈|獎賞|奖励|獎勵|里數|积分|積分|福利|迎新|活动|活動|羊毛|满减|滿減|兑换|兌換|领券|領券|\d(?:\.\d)?折|gift|bonus|offer|cash.?back|credit|rebate|reward|\$|%|％", re.I)
 EXPIRED = re.compile(r"\b(?:dead|expired|ended)\b|已结束|已結束|已过期|已過期|已截止|失效", re.I)
 EDITORIAL = re.compile(r"^Best credit card combinations|^How (?:to|do)|^What (?:is|are)|^Weekly (?:review|roundup)", re.I)
 
@@ -49,6 +49,13 @@ def report_day(now: dt.datetime) -> dt.date:
 def clean_text(value: str) -> str:
     value = re.sub(r"<script\b[^>]*>.*?</script>|<style\b[^>]*>.*?</style>", " ", value or "", flags=re.S | re.I)
     return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", value))).strip()
+
+
+def relevant_title(title, source):
+    # A configured bank promotion index supplies the institution context;
+    # community articles must still name a financial product in their title.
+    bank_index = source.get("source_type") == "official" and source.get("bank") and source.get("activity_index", False)
+    return bool((FINANCIAL.search(title) or bank_index) and BENEFIT.search(title))
 
 
 def date_value(value: str | None, timezone: str) -> tuple[str | None, str]:
@@ -102,10 +109,16 @@ class Page(HTMLParser):
         self.times: list[str] = []
         self._anchor = None
         self._json = None
+        self._rows = []
+        self._date_span = None
         self.feed(text)
 
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
+        if tag == "li":
+            self._rows.append({"links": [], "dates": []})
+        if tag == "span" and self._rows and self._anchor is None:
+            self._date_span = []
         if tag == "meta":
             self.meta[(a.get("property") or a.get("name") or a.get("itemprop") or "").lower()] = a.get("content", "")
         if tag == "time" and a.get("datetime"):
@@ -120,12 +133,27 @@ class Page(HTMLParser):
             self._anchor["title"] += data
         if self._json is not None:
             self._json.append(data)
+        if self._date_span is not None:
+            self._date_span.append(data)
 
     def handle_endtag(self, tag):
         if tag == "a" and self._anchor is not None:
             self._anchor["title"] = clean_text(self._anchor["title"] or self._anchor["hint"])
             self.links.append(self._anchor)
+            if self._rows:
+                self._rows[-1]["links"].append(self._anchor)
             self._anchor = None
+        if tag == "span" and self._date_span is not None:
+            value = clean_text("".join(self._date_span))
+            if self._rows and re.fullmatch(r"20\d{2}[-/]\d{1,2}[-/]\d{1,2}", value):
+                self._rows[-1]["dates"].append(value)
+            self._date_span = None
+        if tag == "li" and self._rows:
+            row = self._rows.pop()
+            # Only a single link paired with one standalone date. Dates in
+            # anchor titles, activity prose, footer text or other rows do not count.
+            if len(row["links"]) == len(row["dates"]) == 1:
+                row["links"][0]["index_date"] = row["dates"][0]
         if tag == "script" and self._json is not None:
             try:
                 self.structured.append(json.loads("".join(self._json)))
@@ -308,25 +336,29 @@ def html_entries(text, source, client):
     pattern = re.compile(source.get("link_pattern", r"."))
     detail_errors = []
     accepted = []
+    detail_requests = 0
     for entry in candidates:
         title = clean_text(entry.get("title", ""))
         url = urllib.parse.urljoin(source["url"], entry.get("url", ""))
-        if url in seen or not pattern.search(url) or not FINANCIAL.search(title) or not BENEFIT.search(title):
+        if url in seen or not pattern.search(url) or not relevant_title(title, source):
             continue
         allowed = source.get("link_domains", [urllib.parse.urlsplit(source["url"]).hostname])
         if urllib.parse.urlsplit(url).hostname not in allowed:
             continue
         seen.add(url)
-        published, evidence = None, "not_disclosed"
-        try:
-            article, _, _ = client.get(url)
-            published, evidence = page_date(Page(article), article)
-        except FetchError as exc:
-            detail_errors.append({"url": url, "reason": str(exc), "status": exc.status})
+        published = entry.get("index_date") if source.get("use_index_dates", False) else None
+        evidence = "public_index_date" if published else "not_disclosed"
+        if not published and detail_requests < source.get("max_detail_pages", 3):
+            detail_requests += 1
+            try:
+                article, _, _ = client.get(url)
+                published, evidence = page_date(Page(article), article)
+            except FetchError as exc:
+                detail_errors.append({"url": url, "reason": str(exc), "status": exc.status})
         if published or source.get("allow_undated", False):
             accepted.append({"title": title, "source_url": url, "published_raw": published,
                              "date_evidence": evidence, "publication_kind": "published"})
-        if len(seen) >= source.get("max_detail_pages", 3):
+        if len(seen) >= source.get("max_index_candidates", 100):
             break
     return accepted, len(seen), detail_errors
 
@@ -348,7 +380,7 @@ def normalize(entry, source, now, target_day):
     url = entry.get("source_url", "").strip()
     if not title or not url.startswith(("https://", "http://")) or EXPIRED.search(title) or EDITORIAL.search(title):
         return None
-    if not FINANCIAL.search(title) or not BENEFIT.search(title):
+    if not relevant_title(title, source):
         return None
     published, precision = date_value(entry.get("published_raw"), source["timezone"])
     if published:
@@ -397,6 +429,8 @@ def collect_source(source, client, now, target_day):
         else:
             entries, count, detail_errors = html_entries(text, source, client)
             status.update(items_seen=count)
+            if not Page(text).links and re.search(r'<script\b[^>]*\bsrc=', text, re.I):
+                status["discovery_note"] = "javascript_only_index_no_static_links"
             if detail_errors:
                 status["detail_errors"] = detail_errors
         offers = []
@@ -408,6 +442,8 @@ def collect_source(source, client, now, target_day):
                 break
         status.update(status="ok" if offers else "empty", items_accepted=len(offers),
                       reason="public_leads_collected" if offers else "no_recent_dated_financial_leads")
+        if not offers and status.get("discovery_note"):
+            status["reason"] = status["discovery_note"]
         return offers, status
     except FetchError as exc:
         status.update(status=exc.status, http_status=exc.http_status, reason=str(exc))

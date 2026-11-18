@@ -126,6 +126,11 @@ def offer_identity(item):
             re.sub(r'\s+', '', item['title']).casefold())
 
 
+def source_identity(item):
+    parsed = urlparse(str(item.get('source_url', '')))
+    return (item.get('region'), parsed.scheme.lower(), parsed.netloc.lower(), parsed.path, parsed.query)
+
+
 def activity_time(item):
     value = text_value(item.get('time') or item.get('start_time'))
     match = re.match(r'^(\d{1,2}):(\d{2})(?:\b|[—–-])', value)
@@ -389,8 +394,15 @@ def build_report(day, *, offers_path=None, collected_path=None, status_path=None
     if not isinstance(collection_status, dict):
         raise ValueError('collection_status must be an object')
     offers, seen = [], set()
+    official_sources = {source_identity(item) for item in curated
+                        if usable_offer(item, day) and verified_for(item, day)}
     for item in curated + collected:
         if not usable_offer(item, day):
+            continue
+        # Prefer the reviewed terms when a feed rediscovers the same official
+        # article with its original (different) headline; don't count it twice.
+        if (item.get('source_type') == 'official' and item.get('source_id')
+                and not verified_for(item, day) and source_identity(item) in official_sources):
             continue
         key = offer_identity(item)
         if key in seen:

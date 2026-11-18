@@ -19,6 +19,19 @@ NOW = dt.datetime.fromisoformat('2026-11-19T05:00:00+08:00')
 
 
 class PublicationTests(unittest.TestCase):
+    def test_official_feed_headline_does_not_duplicate_reviewed_article(self):
+        self.write(self.curated, [self.sample(title='Reviewed offer terms', verified=True,
+                                             start_date='2026-11-16', end_date='2026-11-30')])
+        self.seed([self.sample(title='Original bank headline with different wording',
+                               source_type='official', source_id='bank_promotion_feed')])
+        report = self.build()
+        page = BeautifulSoup(report.read_text(encoding='utf-8'), 'html.parser')
+        metadata = json.loads(page.select_one('#report-metadata').get_text())
+        self.assertEqual(metadata['verified_count'], 1)
+        self.assertEqual(metadata['collected_count'], 0)
+        self.assertIn('Reviewed offer terms', page.select_one('#us-verified').get_text())
+        self.assertNotIn('Original bank headline', page.select_one('#us-collected').get_text())
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
