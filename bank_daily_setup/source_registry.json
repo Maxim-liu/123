@@ -1,0 +1,289 @@
+{
+  "schema_version": 1,
+  "policy": "永久累积来源登记册；只能新增，禁止删除既有条目。失效、受限、重复的来源保留历史并标注状态，不代表可抓取。候选来源经网址、robots、内容、发布日期、活动真实性及测试验证后才加入sources.json实际采集。禁止绕过登录或验证码。",
+  "created_at": "2026-11-18",
+  "existing_source_ids_preserved": [
+    "cn_smzdm_yangmaocun"
+  ],
+  "candidates": [
+    {
+      "id": "candidate_001",
+      "region": "cn",
+      "category": "official",
+      "name": "交通银行信用卡官网",
+      "homepage": "https://creditcard.bankcomm.com/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_002",
+      "region": "cn",
+      "category": "official",
+      "name": "工商银行信用卡官网",
+      "homepage": "https://www.icbc.com.cn/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_003",
+      "region": "cn",
+      "category": "official",
+      "name": "浦发银行信用卡官网",
+      "homepage": "https://ccc.spdb.com.cn/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_004",
+      "region": "cn",
+      "category": "official",
+      "name": "光大银行信用卡官网",
+      "homepage": "https://xyk.cebbank.com/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_005",
+      "region": "cn",
+      "category": "official",
+      "name": "平安银行信用卡官网",
+      "homepage": "https://creditcard.pingan.com/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_006",
+      "region": "cn",
+      "category": "official",
+      "name": "华夏银行信用卡官网",
+      "homepage": "https://creditcard.hxb.com.cn/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_007",
+      "region": "cn",
+      "category": "community",
+      "name": "什么值得买金融优惠频道",
+      "homepage": "https://www.smzdm.com/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_008",
+      "region": "cn",
+      "category": "community",
+      "name": "知乎信用卡公开内容",
+      "homepage": "https://www.zhihu.com/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_009",
+      "region": "cn",
+      "category": "travel",
+      "name": "东方航空官网",
+      "homepage": "https://www.ceair.com/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_010",
+      "region": "cn",
+      "category": "travel",
+      "name": "海南航空官网",
+      "homepage": "https://www.hnair.com/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_011",
+      "region": "cn",
+      "category": "travel",
+      "name": "南方航空官网",
+      "homepage": "https://www.csair.com/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_012",
+      "region": "cn",
+      "category": "travel",
+      "name": "国泰航空官网",
+      "homepage": "https://www.cathaypacific.com/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_013",
+      "region": "cn",
+      "category": "payment",
+      "name": "云闪付官网",
+      "homepage": "https://www.95516.com/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_014",
+      "region": "hk",
+      "category": "official",
+      "name": "东亚银行香港官网",
+      "homepage": "https://www.hkbea.com/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_015",
+      "region": "hk",
+      "category": "official",
+      "name": "大新银行官网",
+      "homepage": "https://www.dahsing.com/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_016",
+      "region": "hk",
+      "category": "official",
+      "name": "星展银行香港官网",
+      "homepage": "https://www.dbs.com.hk/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_017",
+      "region": "hk",
+      "category": "official",
+      "name": "花旗银行香港官网",
+      "homepage": "https://www.citibank.com.hk/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_018",
+      "region": "hk",
+      "category": "official",
+      "name": "美国运通香港官网",
+      "homepage": "https://www.americanexpress.com/hk/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_019",
+      "region": "hk",
+      "category": "community",
+      "name": "香港高登讨论区",
+      "homepage": "https://forum.hkgolden.com/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_020",
+      "region": "hk",
+      "category": "community",
+      "name": "Price.com.hk 香港优惠资讯",
+      "homepage": "https://www.price.com.hk/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_021",
+      "region": "us",
+      "category": "official",
+      "name": "Capital One 官网",
+      "homepage": "https://www.capitalone.com/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_022",
+      "region": "us",
+      "category": "official",
+      "name": "US Bank 官网",
+      "homepage": "https://www.usbank.com/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_023",
+      "region": "us",
+      "category": "official",
+      "name": "Bank of America 官网",
+      "homepage": "https://www.bankofamerica.com/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_024",
+      "region": "us",
+      "category": "official",
+      "name": "Discover 官网",
+      "homepage": "https://www.discover.com/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_025",
+      "region": "us",
+      "category": "community",
+      "name": "FlyerTalk 论坛",
+      "homepage": "https://www.flyertalk.com/forum/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_026",
+      "region": "us",
+      "category": "community",
+      "name": "The Points Guy",
+      "homepage": "https://thepointsguy.com/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_027",
+      "region": "us",
+      "category": "community",
+      "name": "One Mile at a Time",
+      "homepage": "https://onemileatatime.com/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_028",
+      "region": "us",
+      "category": "community",
+      "name": "View from the Wing",
+      "homepage": "https://viewfromthewing.com/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_029",
+      "region": "us",
+      "category": "community",
+      "name": "Upgraded Points",
+      "homepage": "https://upgradedpoints.com/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_030",
+      "region": "us",
+      "category": "community",
+      "name": "Reddit r/amex",
+      "homepage": "https://www.reddit.com/r/amex/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_031",
+      "region": "us",
+      "category": "community",
+      "name": "Reddit r/ChaseSapphire",
+      "homepage": "https://www.reddit.com/r/ChaseSapphire/",
+      "status": "pending_verification",
+      "note": "入口候选，未核验可采集性；不能计入有效产出"
+    }
+  ]
+}
