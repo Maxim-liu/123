@@ -109,15 +109,17 @@ class PublicationTests(unittest.TestCase):
         self.assertIn('2026-11-18 21:05', soup.select_one('#data-freshness').get_text())
         self.assertNotIn('2026-11-19 04:59', soup.select_one('#data-freshness').get_text())
 
-    def test_current_page_confirmation_is_not_confirmation_of_the_target_day(self):
+    def test_current_page_quotes_have_explicit_unknown_deadline_label(self):
         self.write(self.curated, [self.sample(title='Current official page', verified=True,
                                              collected_at=None, verification_scope='current_page',
                                              verified_at='2026-11-18T22:15:00+08:00')])
         report = self.build()
         metadata = publish_report(report, self.site)
         page = BeautifulSoup(report.read_text(encoding='utf-8'), 'html.parser')
-        self.assertNotIn('Current official page', page.select_one('#us-verified').get_text())
-        self.assertIn('本期活动时间及个人资格待确认', page.select_one('#us-collected').get_text())
+        self.assertIn('Current official page', page.select_one('#us-verified').get_text())
+        self.assertIn('官网当前报价，截止未公布', page.select_one('#us-verified').get_text())
+        self.assertNotIn('Current official page', page.select_one('#us-collected').get_text())
+        self.assertEqual(metadata['current_page_count'], 1)
         self.assertEqual(metadata['collected_at'], '2026-11-18T22:15:00+08:00')
 
     def test_new_items_are_sorted_by_bank_and_date(self):
@@ -125,8 +127,9 @@ class PublicationTests(unittest.TestCase):
                    self.sample(bank='A Bank', title='A later', end_date='2026-12-31'),
                    self.sample(bank='A Bank', title='A earlier', end_date='2026-11-30')])
         page = BeautifulSoup(self.build().read_text(encoding='utf-8'), 'html.parser')
-        titles = [item.get_text() for item in page.select('#us-collected h3')]
-        self.assertEqual(titles, ['A Bank · A earlier', 'A Bank · A later', 'B Bank · B'])
+        rows = [(row.select_one('.bank').get_text(), row.select_one('.offer-title').get_text())
+                for row in page.select('#us-collected tbody tr')]
+        self.assertEqual(rows, [('A Bank', 'A earlier'), ('A Bank', 'A later'), ('B Bank', 'B')])
 
     def test_same_day_changed_content_changes_revision_and_identical_retry_does_not(self):
         self.seed([self.sample()])
@@ -143,19 +146,179 @@ class PublicationTests(unittest.TestCase):
         self.assertEqual(page.select_one('meta[name="report-revision"]')['content'], changed['revision'])
         self.assertIn("const REV='" + changed['revision'] + "'", page.select_one('#pwa-app-script').get_text())
 
-    def test_all_historical_regions_and_sections_are_preserved(self):
-        report = self.build()
-        publish_report(report, self.site)
+    def test_regions_are_rebuilt_and_historical_rows_are_removed(self):
         original = BeautifulSoup(TEMPLATE.read_text(encoding='utf-8'), 'html.parser')
+        for region in ('cn', 'hk', 'us'):
+            original.select_one('#region-' + region).append(BeautifulSoup(
+                '<p>OLD_EDITION_18</p><table><tr><td>周三旧活动</td></tr></table>', 'html.parser'))
+        legacy_template = self.base / 'legacy-template.html'
+        legacy_template.write_text(str(original), encoding='utf-8')
+        report = build_report(DAY, offers_path=self.curated, collected_path=self.collected,
+                              status_path=self.status, template_path=legacy_template,
+                              output_dir=self.base / 'archive', now=NOW)
+        publish_report(report, self.site)
         published = BeautifulSoup(report.read_text(encoding='utf-8'), 'html.parser')
         for region in ('cn', 'hk', 'us'):
             selector = '#region-' + region
             self.assertEqual(len(published.select(selector)), 1)
-            self.assertEqual(len(original.select(selector + ' tr')), len(published.select(selector + ' tr')))
+            self.assertNotIn('OLD_EDITION_18', published.select_one(selector).get_text())
+            self.assertNotIn('周三旧活动', published.select_one(selector).get_text())
         for selector in ('#today', '#all', '#miles', '#deadlines', '#hk-all', '#us-all',
-                         '#pwa-app-script', '#app-update-banner'):
+                         '#hk-today', '#us-today', '#hk-miles', '#us-miles', '#hk-deadlines',
+                         '#us-deadlines', '#us-records', '#us-business', '#pwa-app-script', '#app-update-banner'):
             self.assertEqual(len(published.select(selector)), 1, selector)
         self.assertEqual(report.read_bytes(), (self.site / 'index.html').read_bytes())
+
+    def test_thursday_edition_excludes_wednesday_monthly_18_and_expired_offers(self):
+        common = {'verified': True, 'start_date': '2026-11-01', 'end_date': '2026-11-30'}
+        items = [self.sample(title='Wednesday only', weekdays=[3], **common),
+                 self.sample(title='Monthly 18 only', month_days=[18], **common),
+                 self.sample(title='One day 18 only', verified=True, start_date='2026-11-18', end_date='2026-11-18'),
+                 self.sample(title='Expired offer', verified=True, start_date='2026-11-01', end_date='2026-11-17'),
+                 self.sample(title='Thursday afternoon', weekdays=[4], time='14:00', **common),
+                 self.sample(title='Monthly 19 morning', month_days=[19], time='08:30', **common)]
+        self.write(self.curated, items)
+        page = BeautifulSoup(self.build().read_text(encoding='utf-8'), 'html.parser')
+        for title in ['Wednesday only', 'Monthly 18 only', 'One day 18 only', 'Expired offer']:
+            self.assertNotIn(title, page.get_text())
+        self.assertEqual([row.get_text() for row in page.select('#us-today .offer-title')],
+                         ['Monthly 19 morning', 'Thursday afternoon'])
+        self.assertIn('周四', page.select_one('header .sub').get_text())
+
+    def test_previous_one_time_release_is_not_a_new_daily_drop(self):
+        self.write(self.curated, [self.sample(title='Remaining quota', verified=True,
+                                             start_date='2026-11-18', end_date='2026-11-30',
+                                             release_date='2026-11-18', time='10:00', highlight='rare')])
+        page = BeautifulSoup(self.build().read_text(encoding='utf-8'), 'html.parser')
+        self.assertIn('Remaining quota', page.select_one('#us-all').get_text())
+        self.assertNotIn('Remaining quota', page.select_one('#us-today').get_text())
+
+    def test_undated_official_quotes_expire_after_two_days(self):
+        self.write(self.curated, [self.sample(title='Fresh quote', verified=True,
+                                             verification_scope='current_page', verified_at='2026-11-17T23:00:00+08:00'),
+                                  self.sample(title='Stale quote', verified=True,
+                                             verification_scope='current_page', verified_at='2026-11-16T23:00:00+08:00')])
+        page = BeautifulSoup(self.build().read_text(encoding='utf-8'), 'html.parser')
+        self.assertIn('Fresh quote', page.select_one('#us-all').get_text())
+        self.assertNotIn('Stale quote', page.select_one('#us-all').get_text())
+        self.assertIn('Stale quote', page.select_one('#us-collected').get_text())
+
+    def test_partial_current_page_dates_need_recent_confirmation(self):
+        common = {'verified': True, 'verification_scope': 'current_page',
+                  'verified_at': '2026-11-16T23:00:00+08:00'}
+        self.write(self.curated, [self.sample(title='Only end date', end_date='2026-11-30', **common),
+                                  self.sample(title='Only start date', start_date='2026-11-01', **common),
+                                  self.sample(title='Complete official period', start_date='2026-11-01',
+                                              end_date='2026-11-30', **common),
+                                  self.sample(title='Fresh partial date', end_date='2026-11-30',
+                                              verified=True, verification_scope='current_page',
+                                              verified_at='2026-11-18T23:00:00+08:00')])
+        page = BeautifulSoup(self.build().read_text(encoding='utf-8'), 'html.parser')
+        for title in ['Only end date', 'Only start date']:
+            self.assertNotIn(title, page.select_one('#us-all').get_text())
+            self.assertIn(title, page.select_one('#us-collected').get_text())
+        for title in ['Complete official period', 'Fresh partial date']:
+            self.assertIn(title, page.select_one('#us-all').get_text())
+
+    def test_display_codes_and_historical_source_are_readable(self):
+        labels = {'welcome': '迎新奖励', 'business': '商业卡', 'transfer': '转点加赠',
+                  'payment': '支付优惠', 'deposit': '存款与开户', 'benefit': '卡片权益', 'points': '积分活动'}
+        items = [self.sample(title='Offer ' + str(index), category=code, verified=True,
+                             start_date='2026-11-01', end_date='2026-11-30')
+                 for index, code in enumerate(labels)]
+        items[0].update(record_status='recent_high', comparison='近期奖励高于常规报价。',
+                        history_source_url='https://example.com/reward-history')
+        items[1].update(record_status='not_confirmed', comparison={'summary': '尚未证实历史最高。',
+                        'history_source_url': 'https://example.com/business-history'})
+        self.write(self.curated, items)
+        page = BeautifulSoup(self.build().read_text(encoding='utf-8'), 'html.parser')
+        for code, label in labels.items():
+            self.assertIn(label, page.select_one('#us-all').get_text())
+            self.assertNotIn(code, page.select_one('#us-all').get_text())
+        self.assertIn('近期高位', page.select_one('#us-records').get_text())
+        self.assertIn('未证实史高', page.select_one('#us-records').get_text())
+        self.assertNotIn('recent_high', page.select_one('#us-records').get_text())
+        self.assertNotIn('not_confirmed', page.select_one('#us-records').get_text())
+        self.assertEqual(len(page.select('#us-records a[href="https://example.com/reward-history"]')), 1)
+        self.assertEqual(len(page.select('#us-records a[href="https://example.com/business-history"]')), 1)
+        self.assertIn('Offer 1', page.select_one('#us-business').get_text())
+        self.assertIn('Offer 2', page.select_one('#us-miles').get_text())
+
+    def test_highlight_expiry_removes_emphasis_but_keeps_valid_offer(self):
+        common = {'verified': True, 'start_date': '2026-11-15', 'end_date': '2026-12-31'}
+        self.write(self.curated, [self.sample(title='Old rare spotlight', highlight='rare', highlight_until='2026-11-18', **common),
+                                  self.sample(title='Last day rare spotlight', highlight='rare', highlight_until='2026-11-19', **common),
+                                  self.sample(title='Active value spotlight', highlight='value', highlight_until='2026-11-22', **common)])
+        page = BeautifulSoup(self.build().read_text(encoding='utf-8'), 'html.parser')
+        self.assertIn('Old rare spotlight', page.select_one('#us-all').get_text())
+        self.assertNotIn('Old rare spotlight', page.select_one('#us-rare').get_text())
+        self.assertNotIn('Old rare spotlight', page.select_one('#us-today').get_text())
+        self.assertIn('Last day rare spotlight', page.select_one('#us-rare').get_text())
+        self.assertIn('Last day rare spotlight', page.select_one('#us-today').get_text())
+        self.assertIn('Active value spotlight', page.select_one('#us-value').get_text())
+
+    def test_credit_card_sections_exclude_deposits_and_transfer_bonuses(self):
+        common = {'verified': True, 'start_date': '2026-11-01', 'end_date': '2026-12-31',
+                  'comparison': '奖励对比说明。', 'record_status': 'not_confirmed'}
+        examples = [('Marriott Bevy', 'welcome'), ('Ink Business Unlimited', 'business'),
+                    ('Ink Business Preferred', '商业卡'), ('Business Checking', 'deposit'),
+                    ('银行开户奖励', '银行开户'), ('LifeMiles加赠', 'transfer'),
+                    ('里程转点奖励', '转点加赠')]
+        self.write(self.curated, [self.sample(title=title, category=kind, **common) for title, kind in examples])
+        page = BeautifulSoup(self.build().read_text(encoding='utf-8'), 'html.parser')
+        self.assertEqual([item.get_text() for item in page.select('#us-records .offer-title')],
+                         ['Ink Business Preferred', 'Ink Business Unlimited', 'Marriott Bevy'])
+        self.assertEqual([item.get_text() for item in page.select('#us-business .offer-title')],
+                         ['Ink Business Preferred', 'Ink Business Unlimited'])
+        self.assertEqual(len(page.select('#us-all tbody tr')), len(examples))
+
+    def test_stats_deduplicate_and_deadlines_use_activity_dates(self):
+        common = {'verified': True, 'start_date': '2026-11-01'}
+        late = self.sample(title='Later deadline', end_date='2026-11-30', highlight='value', **common)
+        early = self.sample(title='Earlier deadline', end_date='2026-11-20', published_at='2026-12-30', **common)
+        self.write(self.curated, [late, early])
+        self.seed([dict(late, source_url='https://example.com/duplicate')])
+        page = BeautifulSoup(self.build().read_text(encoding='utf-8'), 'html.parser')
+        metadata = json.loads(page.select_one('#report-metadata').get_text())
+        self.assertEqual(metadata['verified_count'], 2)
+        self.assertEqual(metadata['collected_count'], 0)
+        self.assertEqual(page.select_one('#region-us .stats .n').get_text(), '2')
+        self.assertEqual([item.get_text() for item in page.select('#us-deadlines .offer-title')],
+                         ['Earlier deadline', 'Later deadline'])
+        self.assertEqual(len(page.select('#us-all tbody tr')), 2)
+
+    def test_tables_keep_semantic_headers_and_mobile_labels(self):
+        self.seed([self.sample()])
+        page = BeautifulSoup(self.build().read_text(encoding='utf-8'), 'html.parser')
+        self.assertTrue(page.select('#us-collected thead th[scope="col"]'))
+        self.assertTrue(all(cell.get('data-label') for cell in page.select('tbody td')))
+        self.assertIn('min-width:0!important', page.select_one('#report-style').get_text())
+        self.assertIn('data-offer-filter', page.select_one('#report-ui-script').get_text())
+
+    def test_new_report_style_does_not_inherit_old_mobile_overrides(self):
+        current = BeautifulSoup((self.site / 'index.html').read_text(), 'html.parser')
+        old_style = current.new_tag('style', id='pwa-mobile-style')
+        old_style.string = '.table-scroll{overflow-x:auto!important}.app-update-banner{display:block!important}'
+        current.head.append(old_style)
+        (self.site / 'index.html').write_text(str(current), encoding='utf-8')
+        publish_report(self.build(), self.site)
+        page = BeautifulSoup((self.site / 'index.html').read_text(), 'html.parser')
+        self.assertIsNotNone(page.select_one('style#report-style'))
+        self.assertIsNone(page.select_one('style#pwa-mobile-style'))
+
+    def test_legacy_report_still_inherits_mobile_style(self):
+        current = BeautifulSoup((self.site / 'index.html').read_text(), 'html.parser')
+        old_style = current.new_tag('style', id='pwa-mobile-style')
+        old_style.string = '.legacy-mobile{max-width:100%}'
+        current.head.append(old_style)
+        (self.site / 'index.html').write_text(str(current), encoding='utf-8')
+        report = self.build()
+        page = BeautifulSoup(report.read_text(), 'html.parser')
+        page.select_one('style#report-style').decompose()
+        report.write_text(str(page), encoding='utf-8')
+        publish_report(report, self.site)
+        published = BeautifulSoup((self.site / 'index.html').read_text(), 'html.parser')
+        self.assertEqual(published.select_one('style#pwa-mobile-style').get_text(), '.legacy-mobile{max-width:100%}')
 
     def test_invalid_report_never_replaces_live_files(self):
         self.write(self.site / 'latest.json', {'date': '2026-11-18'})

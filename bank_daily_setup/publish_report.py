@@ -69,6 +69,8 @@ def publish_report(source, site_dir=None, now=None):
 
     # Preserve current app additions. The canonical template supplies the newest PWA logic.
     for selector in PWA_HEAD_SELECTORS:
+        if selector == 'style#pwa-mobile-style' and new.head.select_one('style#report-style'):
+            continue
         if not new.head.select_one(selector):
             existing = old.head.select_one(selector)
             if existing:

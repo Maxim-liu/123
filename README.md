@@ -6,9 +6,10 @@
 
 实际启用的任务是 `.github/workflows/daily-report.yml`，每天 13:00 UTC（北京时间 21:00）依次执行：
 
-1. 从 `bank_daily_setup/sources.json` 中配置的公开来源采集线索。
-2. 合并 `verified_offers.json` 中经来源核对的活动，生成目标日期的日报。
-3. 将本期日报直接发布到根 `index.html` 和 `latest.json`，提交变更供现有网站托管流程发布。
+1. 运行 publication、collection 回归测试与 PWA 测试；全部通过后继续。
+2. 从 `bank_daily_setup/sources.json` 中配置的公开来源采集线索。
+3. 合并 `verified_offers.json` 中经来源核对的活动，生成目标日期的日报。
+4. 将本期日报直接发布到根 `index.html` 和 `latest.json`，提交变更供现有网站托管流程发布。
 
 任务没有邮件步骤。GitHub 定时任务可能延迟；需要补跑时可在 Actions 中运行 **Daily Report**，按需填写 `report_date`。留空会采用北京时间最近一次 21:00 发布周期：21:00 后生成次日，21:00 前补跑当前日。日报覆盖目标日期北京时间 00:00—23:59，不通过目录内“最大文件日期”选择报告。
 
@@ -19,6 +20,7 @@
 ```bash
 python -m pip install 'beautifulsoup4>=4.12,<5'
 python -m unittest discover -s tests -v
+node --test bank_daily_setup/test_pwa.cjs
 python bank_daily_setup/collect_offers.py --date 2026-11-19
 python bank_daily_setup/generate_report.py --date 2026-11-19
 ```
@@ -41,10 +43,11 @@ python publish_report.py 'bank_daily_setup/银行每日线报（2026-11-19）.ht
 
 ## 数据的含义
 
-- `verified_offers.json` 是经来源核对的人工维护记录，格式为 JSON 数组。只有 `verified: true`、有效来源 URL、明确的 `start_date` 与 `end_date`，且目标日报日期落在该区间内，才进入“已核实活动”。是否仍有名额、个人是否合资格仍以来源为准。
-- 已核对当前官方页面但没有公开完整起止日期的活动，可填写 `verification_scope: "current_page"`、`verified: true` 和实际 `verified_at`。这类记录显示“本期活动时间及个人资格待确认”，不会被当作已证明目标日有效的活动。
-- `collected_offers.json` 保存实际取得的公开线索及 `collected_at`。自动采集不等于独立核验，未核验记录明确标记并附原始来源。
+- `verified_offers.json` 是经来源核对的人工维护记录，格式为 JSON 数组。官网活动要求 `verified: true` 和有效来源 URL。已明确的起止日期必须覆盖目标日报日期；`verification_scope: "official_period"` 可根据官方明确给出的活动开始或截止日期保留有效记录。星期和每月日期规则同样按日报日期筛选，过期或尚未开始的活动不会进入本期。
+- 已核对当前官方页面但没有完整起止日期的活动，可填写 `verification_scope: "current_page"`、`verified: true` 和实际 `verified_at`。只要缺少开始或截止日期之一，就要求核对日期在目标日报日期前两日内（含当日），否则进入待确认线索。符合时效的官网报价进入正式活动表；未公布截止日期时明确显示“官网当前报价，截止未公布”，不补造活动日期。官网已明确完整起止日期的活动按有效期判断。
+- `collected_offers.json` 保存实际取得的公开线索及 `collected_at`。未核验记录放在独立社区线索板块，并附原始来源；文章发布时间不当作活动开始日或截止日。
 - `collection_status.json` 单独保存本次采集结果。空结果或失败不会把旧线索的采集时间改成现在，也不会用生成页面的时间充当数据更新时间。
-- 原有 `2026-11-18` 记录保留为历史快照。日报日期变化不表示这些历史活动重新核验或仍可参加。
+- `highlight` 可指定 `rare` 或 `value`，分别显示在稀缺与高价值板块；可选 `highlight_until` 到期后自动停止突出展示。一次投放使用 `release_date` 标注，后续日有余量不等于当天再次投放。
+- 旧 `2026-11-18` 正文只保存在独立的 `archive/2026-11-18.html`。当前日报从结构化活动数据重建，页脚提供存档链接，不再混入旧正文或旧统计。
 
 完整字段说明见 `bank_daily_setup/README.txt`。来源名称、地址或站点结构变化时，需要维护采集配置；来源检查细节保留在 JSON 和任务日志中。
