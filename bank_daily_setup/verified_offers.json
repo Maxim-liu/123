@@ -1,1 +1,84 @@
-[]
+[
+  {
+    "region": "cn",
+    "bank": "兴业银行",
+    "title": "淘天双11支付满减，11月20日结束",
+    "details": "受邀持卡人于淘宝或天猫App选择对应优惠，并通过支付宝使用兴业信用卡付款：满200减10、满2000减20、满5000减50；三档各限享1次，单笔只享一档。Visa单品牌外币卡不参加，名额及资格以收银台显示为准。",
+    "source_url": "https://creditcard.cib.com.cn/promotion/national/20261105.html",
+    "start_date": "2026-11-05",
+    "end_date": "2026-11-20",
+    "category": "支付优惠",
+    "verified": true,
+    "verified_at": "2026-11-18T21:17:49+08:00",
+    "collected_at": "2026-11-18T21:17:49+08:00",
+    "origin": "official"
+  },
+  {
+    "region": "cn",
+    "bank": "农业银行",
+    "title": "钻石／皇冠会员积分兑换接送机",
+    "details": "符合条件的62开头银联信用卡主卡会员，10:00起在掌银“信用卡→优惠→会员特权→境内接送机”兑换。钻石会员10万积分、皇冠会员6万积分兑1次；两档各1500份已于11月18日一次性投放，并非每天补货，余量以App为准。附属卡、航空／百联／华润通联名卡等不参加；未使用也不退积分。",
+    "source_url": "https://www.abchina.com.cn/cn/CreditCard/Special0ffers/All/jsj20261116.htm",
+    "start_date": "2026-11-18",
+    "end_date": "2026-11-30",
+    "category": "稀缺活动",
+    "verified": true,
+    "verified_at": "2026-11-18T21:17:49+08:00",
+    "collected_at": "2026-11-18T21:17:49+08:00",
+    "origin": "official"
+  },
+  {
+    "region": "cn",
+    "bank": "农业银行",
+    "title": "百货商圈购物季：满666减30",
+    "details": "每日10:00—22:00，在指定商圈商户线下使用云闪付付款码，并选择已绑定的农行62开头银联信用卡。每个自然月限2次，总名额15800个一次性投放、用完即止；储值卡、烟酒等不参加。云闪付搜索“2026年农行信用卡百货商圈购物季”查看门店及余量。",
+    "source_url": "https://www.abchina.com.cn/cn/CreditCard/Special0ffers/All/gwj20261112.htm",
+    "start_date": "2026-11-11",
+    "end_date": "2026-12-31",
+    "category": "支付优惠",
+    "verified": true,
+    "verified_at": "2026-11-18T21:17:49+08:00",
+    "collected_at": "2026-11-18T21:17:49+08:00",
+    "origin": "official"
+  },
+  {
+    "region": "hk",
+    "bank": "汇丰银行",
+    "title": "Red信用卡限时迎新加码：合计650 RewardCash",
+    "details": "当前官网：新信用卡客户于11月30日前以优惠码HSBCRED申请，发卡后60天内消费HK$12,000，可获额外350 RewardCash，加基本迎新合计650。官网另列的200奖励需另办现金分期，本条未计入。以新客户定义及完整条款为准；未完成历史奖励对比，不标注史高。",
+    "source_url": "https://www.hsbc.com.hk/credit-cards/products/red/",
+    "end_date": "2026-11-30",
+    "category": "迎新奖励",
+    "verification_scope": "current_page",
+    "verified": true,
+    "verified_at": "2026-11-18T21:17:49+08:00",
+    "collected_at": "2026-11-18T21:17:49+08:00",
+    "origin": "official"
+  },
+  {
+    "region": "us",
+    "bank": "Chase",
+    "title": "Ink Business Preferred商业卡：100,000积分",
+    "details": "当前官网公开开卡奖励：开户后3个月内合资格消费US$8,000，获100,000积分；年费US$95。曾持有此卡可能不符合奖励资格，须符合商业卡申请条件。官网未给出结束日期，申请前复核具体渠道条款；不将本次奖励标为史高。",
+    "source_url": "https://creditcards.chase.com/business-credit-cards/ink/business-preferred",
+    "category": "商业卡",
+    "verification_scope": "current_page",
+    "verified": true,
+    "verified_at": "2026-11-18T21:17:49+08:00",
+    "collected_at": "2026-11-18T21:17:49+08:00",
+    "origin": "official"
+  },
+  {
+    "region": "us",
+    "bank": "Chase",
+    "title": "Total Checking开户奖励US$400",
+    "details": "当前官网面向符合资格的新客户：开户并在优惠登记后90天内收到累计至少US$1,000合资格直接入账。工资、养老金、政府福利等可适用；普通银行转账、Zelle、微额验证入账等不算。须核对既往开户奖励限制及账户月费减免条件，按个人收到的优惠期限办理。",
+    "source_url": "https://www.chase.com/personal/offers/chase-total-checking-account-offer?sitelink=headlinepooffer",
+    "category": "银行开户",
+    "verification_scope": "current_page",
+    "verified": true,
+    "verified_at": "2026-11-18T21:17:49+08:00",
+    "collected_at": "2026-11-18T21:17:49+08:00",
+    "origin": "official"
+  }
+]

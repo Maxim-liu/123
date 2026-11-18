@@ -1,12 +1,16 @@
-银行每日线报 App · Cloudflare Pages 上传版
+银行每日线报 App
 
-1. 在 Cloudflare Pages 的 Direct Upload 页面，上传整个 ZIP 文件（不要上传外层文件夹）。
-2. 上传完成后点击 Deploy site，打开 Cloudflare 提供的 pages.dev 网址。
-3. iPhone 用 Safari → 分享 → 添加到主屏幕；Android 用 Chrome → 安装应用/添加到主屏幕。
-4. 可将同一网址分享给朋友，大家看到同一份在线日报。
+访问：https://bank-daily-report.pages.dev
 
-当前内置：2026-11-18 历史快照，非实时采集数据。
-每天北京时间21:00生成次日日报的自动化任务已设置，但尚未接通 Cloudflare 自动发布。
-要实现真正无人值守更新，需要再配置 Cloudflare API/CI 发布权限和执行环境。不要在聊天中发送 API 密钥。
-在发布链路接通前，可用 publish_report.py 替换日报并重新上传站点文件。
-不另设零点活动板块；零点开始的活动纳入正常分类。稀缺活动和高价值活动保持独立展示。
+iPhone：用 Safari 打开 → 分享 → 添加到主屏幕。
+Android：用 Chrome 打开 → 安装应用／添加到主屏幕。
+同一网址可直接分享。
+
+每日任务：北京时间21:00由 GitHub Actions 采集，生成次日00:00—23:59的日报，并提交根目录 index.html 与 latest.json；Cloudflare Pages 连接 main 分支自动部署。
+定时任务可能有平台延迟，手动补跑和维护方式见 README.md。无需再配置 Cloudflare API 密钥。
+
+本次首次加载修复版前，如手机仍停留在旧页面，请手动刷新或重新打开一次。此后同一天的内容修订也会提示更新；无网络时保留最近已打开的日报。
+
+活动原文链接、适用条件与有效期保留。自动取得但尚未核验的线索会明确标记，2026-11-18旧快照以历史存档展示。
+不另设零点板块；零点活动归入正常分类，稀缺活动与高价值活动分别展示。
+本发布流程不发送邮件。

@@ -1,3 +1,29 @@
 {
-  "date": "2026-11-20"
+  "collected_at": "2026-11-18T13:18:14+00:00",
+  "collected_count": 23,
+  "date": "2026-11-19",
+  "generated_at": "2026-11-18T21:20:16+08:00",
+  "regions": {
+    "cn": {
+      "collected_count": 2,
+      "verified_count": 3
+    },
+    "hk": {
+      "collected_count": 2,
+      "verified_count": 0
+    },
+    "us": {
+      "collected_count": 19,
+      "verified_count": 0
+    }
+  },
+  "report_date": "2026-11-19",
+  "schema_version": 2,
+  "snapshot_date": "2026-11-18",
+  "source_status": "partial",
+  "timezone": "Asia/Shanghai",
+  "verified_count": 3,
+  "window_end": "2026-11-19T23:59:59+08:00",
+  "window_start": "2026-11-19T00:00:00+08:00",
+  "revision": "144c0a77728184feb6bf"
 }

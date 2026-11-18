@@ -163,17 +163,60 @@ const parseDate=s=>{const m=s.match(/20\d{2}-\d{2}-\d{2}/);return m?new Date(m[0
 const empty=document.createElement('div');empty.className='no-results';empty.textContent='没有符合条件的活动，请调整筛选条件。';empty.hidden=true;table.parentElement.after(empty);
 function filter(){let count=0;let previous='';rows.forEach(r=>{const date=parseDate(r.dataset.deadline);const days=date?Math.round((date-reportDate)/86400000):null;const ok=(!search.value||r.dataset.search.includes(search.value.trim().toLowerCase()))&&(!bank.value||r.dataset.bank===bank.value)&&(!type.value||r.dataset.type===type.value)&&(!deadline.value||(deadline.value==='dated'&&date)||(deadline.value==='soon'&&days!==null&&days>=0&&days<=7)||(deadline.value==='month'&&date&&date.getFullYear()===2026&&date.getMonth()===10));r.classList.toggle('is-hidden',!ok);if(ok){count++;previous=r.dataset.bank}});document.querySelector('#filterCount').textContent=`显示 ${count} / ${rows.length} 条活动`;empty.hidden=count!==0;}
 [search,bank,type,deadline].forEach(el=>el.addEventListener(el===search?'input':'change',filter));document.querySelector('#resetFilters').addEventListener('click',()=>{search.value='';bank.value='';type.value='';deadline.value='';filter()});filter();
-// Time statuses are calculated against the report date, not today's actual date.
-const snapshotNow=new Date();document.querySelectorAll('#today tr[data-time]').forEach(r=>{const el=r.querySelector('.time-status');const t=r.dataset.time;if(t==='全天'){el.textContent='全天活动';return;}const m=t.match(/^(\d{2}):(\d{2})$/);if(!m)return;const start=new Date(`2026-11-18T${t}:00+08:00`);if(snapshotNow.toDateString()!==new Date('2026-11-18T12:00:00+08:00').toDateString()){el.textContent='历史时点';el.classList.add('closed')}else if(snapshotNow>=start){el.textContent='已到开始时间';el.classList.add('active')}else{el.textContent='尚未开始'}});
+// This table is an archived snapshot, including its original event times.
+document.querySelectorAll('#today tr[data-time]').forEach(r=>{const el=r.querySelector('.time-status');if(!el)return;el.textContent='历史时点';el.classList.remove('active');el.classList.add('closed')});
 })();
 </script><script>(()=>{const tabs=[...document.querySelectorAll('.region-tab')];function show(r){tabs.forEach(b=>{let on=b.dataset.region===r;b.classList.toggle('active',on);b.setAttribute('aria-selected',String(on))});document.querySelectorAll('.region-panel').forEach(p=>p.hidden=p.id!=='region-'+r)}tabs.forEach(b=>b.addEventListener('click',()=>show(b.dataset.region)));for(const r of ['hk','us']){const root=document.getElementById(r+'-all');const rows=[...root.querySelectorAll('tbody tr')];const search=document.getElementById(r+'-search'),bank=document.getElementById(r+'-bank'),type=document.getElementById(r+'-type');function filter(){let n=0;for(const tr of rows){const ok=(!bank.value||tr.dataset.bank===bank.value)&&(!type.value||tr.dataset.type===type.value)&&(!search.value||tr.textContent.toLowerCase().includes(search.value.trim().toLowerCase()));tr.hidden=!ok;if(ok)n++}document.getElementById(r+'-result').textContent='显示 '+n+' / '+rows.length+' 条'}[search,bank,type].forEach(x=>x.addEventListener(x===search?'input':'change',filter));filter()}})();</script><div class="app-update-banner" id="app-update-banner" role="status">发现新版日报<button id="app-update-button" type="button">立即更新</button></div><script id="pwa-app-script">
 (()=>{
-const BUILD='2026-11-18';const banner=document.getElementById('app-update-banner');
-if('serviceWorker' in navigator && location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(()=>{});
-async function check(){if(!/^https?:$/.test(location.protocol))return;
-try{const r=await fetch('./latest.json?check='+Date.now(),{cache:'no-store'});if(!r.ok)return;const data=await r.json();if(/^20\d{2}-\d{2}-\d{2}$/.test(data.date)&&data.date>BUILD){banner.style.display='flex';}}catch(e){}
+const BUILD='2026-11-18';
+const REV='__REPORT_REVISION__';
+const banner=document.getElementById('app-update-banner');
+const button=document.getElementById('app-update-button');
+if(!banner||!button)return;
+banner.setAttribute('aria-live','polite');
+let checking=false;
+let refreshing=false;
+if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){
+  navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).catch(()=>{});
 }
-document.getElementById('app-update-button').addEventListener('click',()=>location.replace('./?v='+Date.now()));
-check();document.addEventListener('visibilitychange',()=>{if(!document.hidden)check()});
+function hasUpdate(data){
+  if(!data||typeof data!=='object')return false;
+  const revision=typeof data.revision==='string'?data.revision.trim():'';
+  if(revision)return revision!==REV;
+  const date=typeof data.report_date==='string'?data.report_date:data.date;
+  // Older deployments only contain a date; correcting a future date is also an update.
+  return typeof date==='string'&&/^20\d{2}-\d{2}-\d{2}$/.test(date)&&date!==BUILD;
+}
+async function check(){
+  if(checking||refreshing||!/^https?:$/.test(location.protocol))return;
+  checking=true;
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),10000);
+  try{
+    const response=await fetch('./latest.json?check='+Date.now(),{cache:'no-store',signal:controller.signal});
+    if(!response.ok)return;
+    const data=await response.json();
+    banner.style.display=hasUpdate(data)?'flex':'none';
+  }catch(_){}finally{
+    clearTimeout(timeout);
+    checking=false;
+  }
+}
+button.addEventListener('click',()=>{
+  if(refreshing)return;
+  refreshing=true;
+  button.disabled=true;
+  button.textContent='更新中…';
+  const target=new URL('./',location.href);
+  target.searchParams.set('v',String(Date.now()));
+  target.hash=location.hash;
+  // Only the user's click navigates; service-worker activation never reloads a page.
+  location.replace(target.href);
+});
+check();
+setInterval(()=>{if(!document.hidden)check()},60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)check()});
+window.addEventListener('pageshow',()=>{if(!document.hidden)check()});
+window.addEventListener('online',()=>{if(!document.hidden)check()});
 })();</script></body>
 </html>

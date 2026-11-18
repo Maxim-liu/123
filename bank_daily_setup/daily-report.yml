@@ -1,33 +1,59 @@
+# Reference copy only; GitHub runs .github/workflows/daily-report.yml.
 name: Daily Report
+
 on:
   workflow_dispatch:
+    inputs:
+      report_date:
+        description: 'Optional edition date (YYYY-MM-DD); normally leave blank'
+        required: false
+        type: string
   schedule:
-    - cron: '0 13 * * *' # 21:00 Asia/Shanghai (UTC+8)
+    - cron: '0 13 * * *' # 21:00 Asia/Shanghai
+
 permissions:
   contents: write
+
+concurrency:
+  group: daily-bank-report
+  cancel-in-progress: false
+
 jobs:
   update:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Install dependencies
-        run: pip install beautifulsoup4
-      - name: Generate next-day report
-        run: python generate_report.py
-      - name: Publish report
+        run: python -m pip install 'beautifulsoup4>=4.12,<5'
+      - name: Check publication safeguards
         run: |
-          FILE=$(python -c "from datetime import datetime,timedelta; from zoneinfo import ZoneInfo; d=datetime.now(ZoneInfo('Asia/Shanghai')).date()+timedelta(days=1); print(f'银行每日线报（{d.isoformat()}）.html')")
-          python publish_report.py "$FILE"
-      - name: Commit and push
+          python -m unittest discover -s tests -v
+          node --test bank_daily_setup/test_pwa.cjs
+      - name: Collect, generate and publish the current edition
+        env:
+          REQUESTED_REPORT_DATE: ${{ inputs.report_date }}
+        run: |
+          args=()
+          if [ -n "$REQUESTED_REPORT_DATE" ]; then
+            args+=(--date "$REQUESTED_REPORT_DATE")
+          fi
+          python bank_daily_setup/collect_offers.py "${args[@]}"
+          python bank_daily_setup/generate_report.py "${args[@]}"
+      - name: Commit the report and actual collection state
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html latest.json
-          git add -- '银行每日线报（'*.html
+          git add -- index.html latest.json bank_daily_setup/collection_status.json
+          if [ -f bank_daily_setup/collected_offers.json ]; then
+            git add -- bank_daily_setup/collected_offers.json
+          fi
+          git add -- bank_daily_setup/银行每日线报（*.html
           if ! git diff --cached --quiet; then
-            git commit -m 'Publish next-day bank report'
+            git commit -m 'Publish daily bank report and collection state'
             git push
           fi
