@@ -1,20 +1,21 @@
 {
-  "collected_at": "2026-11-18T21:59:53+08:00",
-  "collected_count": 24,
+  "collected_at": "2026-11-18T22:10:30+08:00",
+  "collected_count": 74,
+  "combined_lead_count": 7,
   "current_page_count": 4,
   "date": "2026-11-19",
-  "generated_at": "2026-11-18T22:01:05+08:00",
+  "generated_at": "2026-11-18T22:10:35+08:00",
   "regions": {
     "cn": {
-      "collected_count": 2,
-      "verified_count": 29
+      "collected_count": 33,
+      "verified_count": 37
     },
     "hk": {
-      "collected_count": 1,
-      "verified_count": 9
+      "collected_count": 17,
+      "verified_count": 13
     },
     "us": {
-      "collected_count": 21,
+      "collected_count": 24,
       "verified_count": 8
     }
   },
@@ -22,8 +23,8 @@
   "schema_version": 3,
   "source_status": "partial",
   "timezone": "Asia/Shanghai",
-  "verified_count": 46,
+  "verified_count": 58,
   "window_end": "2026-11-19T23:59:59+08:00",
   "window_start": "2026-11-19T00:00:00+08:00",
-  "revision": "7c82823c100f5981c54b"
+  "revision": "631ffc573b4dc4af8bda"
 }

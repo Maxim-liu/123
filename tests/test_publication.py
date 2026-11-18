@@ -19,6 +19,46 @@ NOW = dt.datetime.fromisoformat('2026-11-19T05:00:00+08:00')
 
 
 class PublicationTests(unittest.TestCase):
+    def test_reviewed_duplicate_keeps_sources_but_changed_offer_remains_visible(self):
+        canonical = self.sample(id='canonical', title='Reviewed transfer offer',
+            source_url='https://example.com/reviewed',
+            related_leads=[{'id': 'blog', 'title': '40% transfer bonus'}])
+        self.write(self.curated, [canonical])
+        self.seed([self.sample(id='blog', title='40% transfer bonus',
+            source_url='https://blog.example/bonus', origin='Community blog')])
+        page = BeautifulSoup(self.build().read_text(encoding='utf-8'), 'html.parser')
+        metadata = json.loads(page.select_one('#report-metadata').get_text())
+        self.assertEqual(metadata['collected_count'], 1)
+        self.assertEqual(metadata['combined_lead_count'], 1)
+        self.assertIsNotNone(page.select_one('#us-collected a[href="https://blog.example/bonus"]'))
+        self.seed([self.sample(id='blog', title='50% transfer bonus',
+            source_url='https://blog.example/bonus', origin='Community blog')])
+        page = BeautifulSoup(self.build().read_text(encoding='utf-8'), 'html.parser')
+        metadata = json.loads(page.select_one('#report-metadata').get_text())
+        self.assertEqual(metadata['collected_count'], 2)
+        self.assertIn('50% transfer bonus', page.select_one('#us-collected').get_text())
+
+    def test_manual_community_leads_expire_without_inventing_campaign_dates(self):
+        self.write(self.curated, [self.sample(title='Expired community review', review_expires_on='2026-11-18'),
+                                  self.sample(title='Recent community lead', review_expires_on='2026-11-30')])
+        page = BeautifulSoup(self.build().read_text(encoding='utf-8'), 'html.parser')
+        leads = page.select_one('#us-collected').get_text()
+        self.assertNotIn('Expired community review', leads)
+        self.assertIn('Recent community lead', leads)
+        self.assertIn('活动日期待确认', leads)
+        self.assertNotIn('2026-11-30', leads)
+
+    def test_reward_amount_survives_compact_and_full_report_sections(self):
+        self.write(self.curated, [self.sample(region='cn', title='京东支付优惠',
+            reward='满800减12，每月1次', details='须选择指定银行卡支付，每日限量。',
+            verified=True, start_date='2026-11-01', end_date='2026-11-30', time='00:00')])
+        page = BeautifulSoup(self.build().read_text(encoding='utf-8'), 'html.parser')
+        for section in ('#today', '#cn-verified'):
+            with self.subTest(section=section):
+                text = page.select_one(section).get_text()
+                self.assertIn('满800减12，每月1次', text)
+                self.assertIn('指定银行卡', text)
+
     def test_official_feed_headline_does_not_duplicate_reviewed_article(self):
         self.write(self.curated, [self.sample(title='Reviewed offer terms', verified=True,
                                              start_date='2026-11-16', end_date='2026-11-30')])
@@ -326,18 +366,67 @@ class PublicationTests(unittest.TestCase):
         metadata = json.loads(page.select_one('#report-metadata').get_text())
         self.assertEqual(metadata['verified_count'], 2)
         self.assertEqual(metadata['collected_count'], 0)
-        self.assertEqual(page.select_one('#region-us .stats .n').get_text(), '2')
+        self.assertEqual(page.select_one('#region-us .region-kpis b').get_text(), '2')
         self.assertEqual([item.get_text() for item in page.select('#us-deadlines .offer-title')],
                          ['Earlier deadline', 'Later deadline'])
         self.assertEqual(len(page.select('#us-all tbody tr')), 2)
 
-    def test_tables_keep_semantic_headers_and_mobile_labels(self):
+    def test_tables_keep_semantic_headers_and_horizontal_mobile_layout(self):
         self.seed([self.sample()])
         page = BeautifulSoup(self.build().read_text(encoding='utf-8'), 'html.parser')
         self.assertTrue(page.select('#us-collected thead th[scope="col"]'))
         self.assertTrue(all(cell.get('data-label') for cell in page.select('tbody td')))
-        self.assertIn('min-width:0!important', page.select_one('#report-style').get_text())
+        css = page.select_one('#report-style').get_text()
+        self.assertIn('.table-scroll{overflow-x:auto', css)
+        self.assertNotIn('td::before', css)
+        self.assertNotIn('tbody tr{display:block', css)
         self.assertIn('data-offer-filter', page.select_one('#report-ui-script').get_text())
+
+    def test_approved_table_columns_and_region_structure_are_restored(self):
+        common = {'verified': True, 'start_date': '2026-11-01', 'end_date': '2026-11-30',
+                  'time': '10:00', 'category': 'points'}
+        self.write(self.curated, [self.sample(region=region, title=region + '积分活动', **common)
+                                  for region in ('cn', 'hk', 'us')]
+                   + [self.sample(title='US Business Card', verified=True, category='business',
+                                  start_date='2026-11-01', end_date='2026-11-30', comparison='历史奖励对比。')])
+        page = BeautifulSoup(self.build().read_text(encoding='utf-8'), 'html.parser')
+        expected = {
+            '#today': ['时间', '银行', '活动', '要点'],
+            '#all': ['银行', '活动', '类型', '要点（门槛 · 频次）', '入口', '截止'],
+            '#miles': ['主体', '动态', '要点', '日期'],
+            '#deadlines': ['截止日期', '涉及活动'],
+            '#hk-all': ['银行 / 平台', '活动', '奖励及条件', '类型', '截止日期', '入口'],
+            '#us-all': ['银行 / 平台', '活动', '奖励及条件', '类型', '截止日期', '入口'],
+            '#us-records': ['银行', '卡种', '奖励及条件', '史高判定', '适用性', '详情'],
+        }
+        for selector, headers in expected.items():
+            with self.subTest(selector=selector):
+                table = page.select_one(selector + ' table')
+                self.assertEqual([cell.get_text() for cell in table.select('thead th')], headers)
+        self.assertEqual(len(page.select('#region-cn > .stats .stat')), 4)
+        self.assertEqual(len(page.select('#region-hk > .region-hero .region-kpis > div')), 3)
+        self.assertEqual(len(page.select('#region-us > .region-hero .region-kpis > div')), 3)
+        self.assertIsNotNone(page.select_one('#all #deadlineFilter'))
+        self.assertIsNotNone(page.select_one('#all #resetFilters'))
+        sections = [node.get('id') for node in page.select('#region-us > section')]
+        self.assertLess(sections.index('us-records'), sections.index('us-all'))
+        self.assertLess(sections.index('us-business'), sections.index('us-all'))
+        self.assertEqual(len(page.select('.wrap > .quick-nav')), 1)
+        self.assertFalse(page.select('.region-panel .quick-nav'))
+        approved = BeautifulSoup((ROOT / 'archive' / '2026-11-18.html').read_text(encoding='utf-8'), 'html.parser')
+        approved_css = '\n'.join(style.get_text() for style in approved.select('style')[:6])
+        self.assertTrue(page.select_one('#report-style').get_text().startswith(approved_css))
+
+    def test_brief_sections_do_not_duplicate_full_activity_terms(self):
+        detail = '开户奖励需完成首笔合资格交易。后续完整条件只在全部活动中显示。'
+        self.write(self.curated, [self.sample(region='cn', title='精简专题活动', verified=True,
+                                             category='points', details=detail, highlight='value', time='10:00',
+                                             start_date='2026-11-01', end_date='2026-11-30')])
+        page = BeautifulSoup(self.build().read_text(encoding='utf-8'), 'html.parser')
+        self.assertEqual(page.get_text().count('后续完整条件只在全部活动中显示。'), 1)
+        row = page.select_one('#all tbody tr')
+        self.assertTrue(row.get('id', '').startswith('offer-cn-'))
+        self.assertEqual(page.select_one('#today .offer-title')['href'], '#' + row['id'])
 
     def test_new_report_style_does_not_inherit_old_mobile_overrides(self):
         current = BeautifulSoup((self.site / 'index.html').read_text(), 'html.parser')

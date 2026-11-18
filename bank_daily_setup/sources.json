@@ -1,7 +1,7 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "request_timeout_seconds": 10,
-  "policy": "仅公共RSS/HTML；实时遵守robots、限流、登录及验证码限制。采集器不确认活动资格或有效期，所有自动记录verified=false。无法确认发布日期的源默认不收录；例外公开发现记录明确published_at=null且不得标成新帖。失败状态仅内部留存。",
+  "policy": "仅公共RSS/HTML；实时遵守robots、限流、登录及验证码限制。自动记录verified=false。官方公开活动列表回溯90日，社区新闻14日；发布日期永不等同活动日期。明确允许的无日期列表记录published_at=null且不标新帖。HTTP200但无具体活动、JS/App页、验证墙分别审计。",
   "sources": [
     {
       "id": "cn_smzdm_yangmaocun",
@@ -19,7 +19,12 @@
       "link_domains": [
         "post.smzdm.com"
       ],
-      "allow_undated": true
+      "allow_undated": true,
+      "channel_category": "community",
+      "article_containers": [
+        "article_content",
+        "article-content"
+      ]
     },
     {
       "id": "cn_yangmaocun",
@@ -33,7 +38,8 @@
       "max_items": 5,
       "max_detail_pages": 3,
       "enabled": true,
-      "link_pattern": "/(?:post/|\\d+\\.html)"
+      "link_pattern": "/(?:post/|\\d+\\.html)",
+      "channel_category": "community"
     },
     {
       "id": "cn_flyer",
@@ -52,7 +58,8 @@
         "www.flyerpoints.cn",
         "www.flyert.com",
         "www.flyert.com.cn"
-      ]
+      ],
+      "channel_category": "community"
     },
     {
       "id": "cn_51credit",
@@ -66,7 +73,8 @@
       "max_items": 5,
       "max_detail_pages": 3,
       "enabled": true,
-      "link_pattern": "(?:thread-|mod=viewthread)"
+      "link_pattern": "(?:thread-|mod=viewthread)",
+      "channel_category": "community"
     },
     {
       "id": "cn_zuanke8",
@@ -80,7 +88,8 @@
       "max_items": 5,
       "max_detail_pages": 3,
       "enabled": true,
-      "link_pattern": "(?:thread-|mod=viewthread)"
+      "link_pattern": "(?:thread-|mod=viewthread)",
+      "channel_category": "community"
     },
     {
       "id": "cn_kashen8",
@@ -94,7 +103,8 @@
       "max_items": 5,
       "max_detail_pages": 3,
       "enabled": true,
-      "link_pattern": "(?:event.php\\?|thread-|mod=viewthread)"
+      "link_pattern": "(?:event.php\\?|thread-|mod=viewthread)",
+      "channel_category": "community"
     },
     {
       "id": "cn_baijiahao",
@@ -109,7 +119,8 @@
       "max_detail_pages": 3,
       "enabled": true,
       "link_pattern": "(?:/s\\?|id=)",
-      "discovery_note": "仅公开页面；无登录、验证码或受限搜索绕过。无可读发布日期则不收录。"
+      "discovery_note": "仅公开页面；无登录、验证码或受限搜索绕过。无可读发布日期则不收录。",
+      "channel_category": "community"
     },
     {
       "id": "cn_unionpay",
@@ -119,12 +130,13 @@
       "method": "html",
       "timezone": "Asia/Shanghai",
       "source_type": "official",
-      "max_age_days": 14,
+      "max_age_days": 90,
       "max_items": 5,
       "max_detail_pages": 1,
       "enabled": true,
       "bank": "银联",
-      "link_pattern": "(?:activity|merchant|detail)"
+      "link_pattern": "(?:activity|merchant|detail)",
+      "channel_category": "payment"
     },
     {
       "id": "cn_boc",
@@ -134,27 +146,31 @@
       "method": "html",
       "timezone": "Asia/Shanghai",
       "source_type": "official",
-      "max_age_days": 14,
+      "max_age_days": 90,
       "max_items": 5,
       "max_detail_pages": 1,
       "enabled": true,
       "bank": "中国银行",
-      "link_pattern": "/(?:t\\d+_|\\d{6}/).*\\.html"
+      "link_pattern": "/(?:t\\d+_|\\d{6}/).*\\.html",
+      "channel_category": "banking"
     },
     {
       "id": "cn_ccb",
       "name": "建设银行信用卡优惠",
       "region": "cn",
-      "url": "https://creditcard.ccb.com/cn/creditcard/favorable.html",
+      "url": "https://sixianghui1.ccb.com/chn/v3/include/favorable/all_1.html",
       "method": "html",
       "timezone": "Asia/Shanghai",
       "source_type": "official",
-      "max_age_days": 14,
+      "max_age_days": 90,
       "max_items": 5,
       "max_detail_pages": 1,
       "enabled": true,
       "bank": "建设银行",
-      "link_pattern": "(?:detail|favorable/|offer)"
+      "link_pattern": "/(?:cn|chn)/(?:v3/include/)?favorable/(?!all_)[^/]+\\.html",
+      "channel_category": "banking",
+      "activity_index": true,
+      "discovery_note": "替换旧404入口；实测公开HTML暂未返回具体活动链接，仍按empty记录，不能算有效采集。"
     },
     {
       "id": "cn_cmb",
@@ -164,12 +180,13 @@
       "method": "html",
       "timezone": "Asia/Shanghai",
       "source_type": "official",
-      "max_age_days": 14,
+      "max_age_days": 90,
       "max_items": 5,
       "max_detail_pages": 1,
       "enabled": true,
       "bank": "招商银行",
-      "link_pattern": "/promotion/"
+      "link_pattern": "/promotion/",
+      "channel_category": "banking"
     },
     {
       "id": "cn_abc",
@@ -179,14 +196,15 @@
       "method": "html",
       "timezone": "Asia/Shanghai",
       "source_type": "official",
-      "max_age_days": 14,
+      "max_age_days": 90,
       "max_items": 5,
       "max_detail_pages": 3,
       "enabled": true,
       "bank": "农业银行",
       "link_pattern": "/cn/CreditCard/Special0ffers/All/[A-Za-z0-9_-]+\\.html?(?:$|[?#])",
       "activity_index": true,
-      "discovery_note": "使用已核实官网活动目录及实际htm文件名；仍须通过实时robots检查，不以URL日期推断发布日期。"
+      "discovery_note": "使用已核实官网活动目录及实际htm文件名；仍须通过实时robots检查，不以URL日期推断发布日期。",
+      "channel_category": "banking"
     },
     {
       "id": "cn_psbc_national",
@@ -196,15 +214,17 @@
       "method": "html",
       "timezone": "Asia/Shanghai",
       "source_type": "official",
-      "max_age_days": 14,
-      "max_items": 6,
+      "max_age_days": 90,
+      "max_items": 8,
       "max_detail_pages": 3,
       "enabled": true,
       "bank": "邮储银行",
       "link_pattern": "/cn/grfw/xyk/tyhd/qgthhd/\\d{6}/t\\d{8}_\\d+\\.html(?:$|[?#])",
       "activity_index": true,
       "use_index_dates": true,
-      "discovery_note": "2026-11-18实测robots通过、公开列表与详情HTTP200；同一列表项独立日期对应文章发布日，仅生成待核线索，活动资格与有效期不自动确认。"
+      "discovery_note": "2026-11-18实测robots通过、公开列表与详情HTTP200；同一列表项独立日期对应文章发布日，仅生成待核线索，活动资格与有效期不自动确认。",
+      "channel_category": "banking",
+      "title_activity_range": true
     },
     {
       "id": "cn_alipay",
@@ -214,12 +234,13 @@
       "method": "html",
       "timezone": "Asia/Shanghai",
       "source_type": "official",
-      "max_age_days": 14,
+      "max_age_days": 90,
       "max_items": 5,
       "max_detail_pages": 1,
       "enabled": true,
       "bank": "支付宝",
-      "link_pattern": "(?:promotion|activity|offer)"
+      "link_pattern": "(?:promotion|activity|offer)",
+      "channel_category": "payment"
     },
     {
       "id": "cn_wechatpay",
@@ -229,12 +250,13 @@
       "method": "html",
       "timezone": "Asia/Shanghai",
       "source_type": "official",
-      "max_age_days": 14,
+      "max_age_days": 90,
       "max_items": 5,
       "max_detail_pages": 1,
       "enabled": true,
       "bank": "微信支付",
-      "link_pattern": "(?:promotion|activity|offer)"
+      "link_pattern": "(?:promotion|activity|offer)",
+      "channel_category": "payment"
     },
     {
       "id": "hk_flyday",
@@ -247,7 +269,8 @@
       "max_age_days": 14,
       "max_items": 6,
       "max_detail_pages": 3,
-      "enabled": true
+      "enabled": true,
+      "channel_category": "travel"
     },
     {
       "id": "hk_flyday_cards",
@@ -260,7 +283,8 @@
       "max_age_days": 14,
       "max_items": 3,
       "max_detail_pages": 3,
-      "enabled": true
+      "enabled": true,
+      "channel_category": "travel"
     },
     {
       "id": "hk_mrmiles",
@@ -273,7 +297,8 @@
       "max_age_days": 14,
       "max_items": 4,
       "max_detail_pages": 3,
-      "enabled": true
+      "enabled": true,
+      "channel_category": "travel"
     },
     {
       "id": "hk_flyagain",
@@ -286,7 +311,8 @@
       "max_age_days": 14,
       "max_items": 4,
       "max_detail_pages": 3,
-      "enabled": true
+      "enabled": true,
+      "channel_category": "travel"
     },
     {
       "id": "hk_lihkg",
@@ -300,7 +326,8 @@
       "max_items": 5,
       "max_detail_pages": 2,
       "enabled": true,
-      "link_pattern": "/thread/\\d+"
+      "link_pattern": "/thread/\\d+",
+      "channel_category": "community"
     },
     {
       "id": "hk_discuss",
@@ -314,13 +341,14 @@
       "max_items": 5,
       "max_detail_pages": 2,
       "enabled": true,
-      "link_pattern": "(?:viewthread.php\\?tid=|thread-)"
+      "link_pattern": "(?:viewthread.php\\?tid=|thread-)",
+      "channel_category": "community"
     },
     {
       "id": "hk_moneyhero",
       "name": "MoneyHero 香港信用卡",
       "region": "hk",
-      "url": "https://www.moneyhero.com.hk/blog/zh/credit-card",
+      "url": "https://www.moneyhero.com.hk/zh/credit-card/comparison/best-sign-up-bonus-credit-cards",
       "method": "html",
       "timezone": "Asia/Hong_Kong",
       "source_type": "community",
@@ -328,7 +356,9 @@
       "max_items": 5,
       "max_detail_pages": 2,
       "enabled": true,
-      "link_pattern": "/blog/zh/"
+      "link_pattern": "/zh/credit-card/(?:blog/|[^/]+\\?)",
+      "channel_category": "community",
+      "discovery_note": "修正原/blog/zh/credit-card的404路径；本轮公开页超出响应大小限制，未宣称采到。"
     },
     {
       "id": "hk_hsbc",
@@ -338,27 +368,32 @@
       "method": "html",
       "timezone": "Asia/Hong_Kong",
       "source_type": "official",
-      "max_age_days": 14,
+      "max_age_days": 90,
       "max_items": 5,
       "max_detail_pages": 1,
       "enabled": true,
       "bank": "汇丰香港",
-      "link_pattern": "/credit-cards/offers/"
+      "link_pattern": "/credit-cards/offers/",
+      "channel_category": "banking"
     },
     {
       "id": "hk_bochk",
       "name": "中银香港信用卡优惠",
       "region": "hk",
-      "url": "https://www.bochk.com/tc/creditcard/promotions.html",
+      "url": "https://www.bochk.com/m/tc/creditcard/promotions/offers.html",
       "method": "html",
       "timezone": "Asia/Hong_Kong",
       "source_type": "official",
-      "max_age_days": 14,
+      "max_age_days": 90,
       "max_items": 5,
-      "max_detail_pages": 1,
+      "max_detail_pages": 2,
       "enabled": true,
       "bank": "中银香港",
-      "link_pattern": "/creditcard/"
+      "link_pattern": "/m/tc/creditcard/promotions/offers/[^/]+\\.html$",
+      "channel_category": "banking",
+      "activity_index": true,
+      "allow_undated": true,
+      "discovery_note": "真实移动版优惠清单；活动标题位于同一li的h1，详情锚点需与标题关联。无发布日期则明确为空。"
     },
     {
       "id": "hk_sc",
@@ -368,12 +403,13 @@
       "method": "html",
       "timezone": "Asia/Hong_Kong",
       "source_type": "official",
-      "max_age_days": 14,
+      "max_age_days": 90,
       "max_items": 5,
       "max_detail_pages": 1,
       "enabled": true,
       "bank": "渣打香港",
-      "link_pattern": "/credit-cards/"
+      "link_pattern": "/credit-cards/",
+      "channel_category": "banking"
     },
     {
       "id": "hk_hangseng",
@@ -383,12 +419,13 @@
       "method": "html",
       "timezone": "Asia/Hong_Kong",
       "source_type": "official",
-      "max_age_days": 14,
+      "max_age_days": 90,
       "max_items": 5,
       "max_detail_pages": 1,
       "enabled": true,
       "bank": "恒生银行",
-      "link_pattern": "/cards/"
+      "link_pattern": "/cards/",
+      "channel_category": "banking"
     },
     {
       "id": "us_doc",
@@ -402,7 +439,9 @@
       "max_items": 8,
       "max_detail_pages": 3,
       "enabled": true,
-      "discovery_note": "robots Crawl-delay 600秒；每次仅一个RSS请求，不抓正文。"
+      "discovery_note": "robots Crawl-delay 600秒；每次仅一个RSS请求，不抓正文。",
+      "channel_category": "community",
+      "use_excerpt_activity_deadlines": true
     },
     {
       "id": "us_frequentmiler",
@@ -415,7 +454,9 @@
       "max_age_days": 14,
       "max_items": 6,
       "max_detail_pages": 3,
-      "enabled": true
+      "enabled": true,
+      "channel_category": "travel",
+      "use_excerpt_activity_deadlines": true
     },
     {
       "id": "us_uscardforum",
@@ -429,7 +470,8 @@
       "max_items": 7,
       "max_detail_pages": 3,
       "enabled": true,
-      "discovery_note": "遵守robots；分类/c/*.rss被禁止，未使用该路径。latest.rss须通过实时robots检查。"
+      "discovery_note": "遵守robots；分类/c/*.rss被禁止，未使用该路径。latest.rss须通过实时robots检查。",
+      "channel_category": "community"
     },
     {
       "id": "us_uscardforum_html",
@@ -443,7 +485,8 @@
       "max_items": 5,
       "max_detail_pages": 3,
       "enabled": true,
-      "link_pattern": "/t/(?:[^/]+/)?\\d+"
+      "link_pattern": "/t/(?:[^/]+/)?\\d+",
+      "channel_category": "community"
     },
     {
       "id": "us_reddit_churning",
@@ -456,7 +499,8 @@
       "max_age_days": 14,
       "max_items": 4,
       "max_detail_pages": 3,
-      "enabled": true
+      "enabled": true,
+      "channel_category": "community"
     },
     {
       "id": "us_reddit_creditcards",
@@ -469,7 +513,8 @@
       "max_age_days": 14,
       "max_items": 4,
       "max_detail_pages": 3,
-      "enabled": true
+      "enabled": true,
+      "channel_category": "community"
     },
     {
       "id": "us_uscreditcardguide",
@@ -482,7 +527,8 @@
       "max_age_days": 14,
       "max_items": 5,
       "max_detail_pages": 3,
-      "enabled": true
+      "enabled": true,
+      "channel_category": "community"
     },
     {
       "id": "us_chase",
@@ -492,12 +538,13 @@
       "method": "html",
       "timezone": "America/New_York",
       "source_type": "official",
-      "max_age_days": 14,
+      "max_age_days": 90,
       "max_items": 5,
       "max_detail_pages": 1,
       "enabled": true,
       "bank": "Chase",
-      "link_pattern": "/personal/(?:checking|credit-cards)"
+      "link_pattern": "/personal/(?:checking|credit-cards)",
+      "channel_category": "banking"
     },
     {
       "id": "us_amex",
@@ -507,12 +554,13 @@
       "method": "html",
       "timezone": "America/New_York",
       "source_type": "official",
-      "max_age_days": 14,
+      "max_age_days": 90,
       "max_items": 5,
       "max_detail_pages": 1,
       "enabled": true,
       "bank": "American Express",
-      "link_pattern": "/us/credit-cards/"
+      "link_pattern": "/us/credit-cards/",
+      "channel_category": "banking"
     },
     {
       "id": "us_citi",
@@ -522,12 +570,13 @@
       "method": "html",
       "timezone": "America/New_York",
       "source_type": "official",
-      "max_age_days": 14,
+      "max_age_days": 90,
       "max_items": 5,
       "max_detail_pages": 1,
       "enabled": true,
       "bank": "Citi",
-      "link_pattern": "/credit-cards/"
+      "link_pattern": "/credit-cards/",
+      "channel_category": "banking"
     },
     {
       "id": "us_wellsfargo",
@@ -537,12 +586,305 @@
       "method": "html",
       "timezone": "America/New_York",
       "source_type": "official",
-      "max_age_days": 14,
+      "max_age_days": 90,
       "max_items": 5,
       "max_detail_pages": 1,
       "enabled": true,
       "bank": "Wells Fargo",
-      "link_pattern": "creditcards.wellsfargo.com/"
+      "link_pattern": "creditcards.wellsfargo.com/",
+      "channel_category": "banking"
+    },
+    {
+      "id": "cn_psbc_debit",
+      "name": "邮储银行借记卡优惠",
+      "region": "cn",
+      "url": "https://www.psbc.com/cn/grfw/yxk/jjkyhhd/",
+      "method": "html",
+      "timezone": "Asia/Shanghai",
+      "source_type": "official",
+      "channel_category": "payment",
+      "max_age_days": 90,
+      "max_items": 8,
+      "max_detail_pages": 2,
+      "enabled": true,
+      "bank": "邮储银行",
+      "activity_index": true,
+      "use_index_dates": true,
+      "link_pattern": "/cn/grfw/yxk/jjkyhhd/\\d{6}/t\\d{8}_\\d+\\.html(?:$|[?#])"
+    },
+    {
+      "id": "cn_citic_notices",
+      "name": "中信信用卡活动公告",
+      "region": "cn",
+      "url": "https://creditcard.ecitic.com/gonggao/index.shtml",
+      "method": "html",
+      "timezone": "Asia/Shanghai",
+      "source_type": "official",
+      "channel_category": "banking",
+      "max_age_days": 90,
+      "max_items": 6,
+      "max_detail_pages": 1,
+      "enabled": true,
+      "bank": "中信银行",
+      "activity_index": true,
+      "use_index_dates": true,
+      "link_pattern": "/gonggao/news_\\d+\\.shtml(?:$|[?#])"
+    },
+    {
+      "id": "cn_cgb_promotions",
+      "name": "广发信用卡优惠活动目录",
+      "region": "cn",
+      "url": "https://card.cgbchina.com.cn/Info/27609540",
+      "method": "html",
+      "timezone": "Asia/Shanghai",
+      "source_type": "official",
+      "channel_category": "banking",
+      "max_age_days": 90,
+      "max_items": 6,
+      "max_detail_pages": 2,
+      "enabled": true,
+      "bank": "广发银行",
+      "activity_index": true,
+      "allow_undated": true,
+      "link_pattern": "/Channel/(?!23358864(?:$|[?#]))\\d+(?:$|[?#])"
+    },
+    {
+      "id": "cn_cib_national",
+      "name": "兴业信用卡全国活动",
+      "region": "cn",
+      "url": "https://creditcard.cib.com.cn/promotion/national/",
+      "method": "html",
+      "timezone": "Asia/Shanghai",
+      "source_type": "official",
+      "channel_category": "banking",
+      "max_age_days": 90,
+      "max_items": 6,
+      "max_detail_pages": 2,
+      "enabled": true,
+      "bank": "兴业银行",
+      "activity_index": true,
+      "link_pattern": "/promotion/national/.+\\.html?",
+      "discovery_note": "已确认真实目录，但本轮robots返回HTML/挑战页，采集必须停止并保留blocked状态。"
+    },
+    {
+      "id": "cn_cmbc_notices",
+      "name": "民生信用卡最新通知",
+      "region": "cn",
+      "url": "https://creditcard.cmbc.com.cn/tyglweb/home/cn/web/customer/import/list_2.shtml",
+      "method": "html",
+      "timezone": "Asia/Shanghai",
+      "source_type": "official",
+      "channel_category": "banking",
+      "max_age_days": 90,
+      "max_items": 6,
+      "max_detail_pages": 2,
+      "enabled": true,
+      "bank": "民生银行",
+      "activity_index": true,
+      "link_pattern": "/customer/import/(?!list_).+\\.shtml",
+      "discovery_note": "真实通知索引；本轮robots返回HTML/挑战页，未取得活动条目。"
+    },
+    {
+      "id": "hk_moneysmart",
+      "name": "MoneySmart 信用卡迎新比较",
+      "region": "hk",
+      "url": "https://www.moneysmart.hk/en/credit-cards/welcome-offer",
+      "method": "html",
+      "timezone": "Asia/Hong_Kong",
+      "source_type": "community",
+      "channel_category": "banking",
+      "max_age_days": 14,
+      "max_items": 6,
+      "max_detail_pages": 2,
+      "enabled": true,
+      "allow_undated": true,
+      "link_pattern": "/en/credit-cards/(?!welcome-offer(?:$|[/?]))[^/?]+\\?provider_slugs",
+      "discovery_note": "真实迎新比较页，但当前通用解析只能读到产品名，缺乏同卡优惠容器关联；纯卡名不得算具体活动，需专门解析后恢复产出。",
+      "require_specific_offer_title": true
+    },
+    {
+      "id": "hk_jetso101",
+      "name": "Jetso101 本月信用卡优惠",
+      "region": "hk",
+      "url": "https://jetso101.com/zh-HK/articles/credit-card-offers-hong-kong",
+      "method": "html",
+      "timezone": "Asia/Hong_Kong",
+      "source_type": "community",
+      "channel_category": "banking",
+      "max_age_days": 14,
+      "max_items": 6,
+      "max_detail_pages": 2,
+      "enabled": true,
+      "allow_undated": true,
+      "link_pattern": "/zh-HK/deals/[^/?]+-[a-f0-9]{8}(?:$|[?#])"
+    },
+    {
+      "id": "hk_timeline",
+      "name": "Timeline 信用卡优惠清单",
+      "region": "hk",
+      "url": "https://timeline.hk/zh-Hant/categories/credit-card",
+      "method": "html",
+      "timezone": "Asia/Hong_Kong",
+      "source_type": "community",
+      "channel_category": "banking",
+      "max_age_days": 14,
+      "max_items": 6,
+      "max_detail_pages": 2,
+      "enabled": true,
+      "allow_undated": true,
+      "link_pattern": "/zh-Hant/deals/[^/?]+-[a-f0-9]{6}(?:$|[?#])",
+      "title_deadline_label": true,
+      "discovery_note": "原文展示的明确“至 YYYY年M月D日”仅用于剔除已到期条目，仍是社区待核信息。",
+      "use_link_headings": true,
+      "facts_from_title_only": true,
+      "mixed_periods_title_pattern": "PCLO"
+    },
+    {
+      "id": "us_awardwallet",
+      "name": "AwardWallet 公开RSS",
+      "region": "us",
+      "url": "https://awardwallet.com/blog/feed/",
+      "method": "rss",
+      "timezone": "America/New_York",
+      "source_type": "community",
+      "channel_category": "travel",
+      "max_age_days": 14,
+      "max_items": 8,
+      "max_detail_pages": 0,
+      "enabled": true,
+      "use_excerpt_activity_deadlines": true
+    },
+    {
+      "id": "us_milestomemories",
+      "name": "Miles to Memories 公开RSS",
+      "region": "us",
+      "url": "https://milestomemories.com/feed/",
+      "method": "rss",
+      "timezone": "America/New_York",
+      "source_type": "community",
+      "channel_category": "travel",
+      "max_age_days": 14,
+      "max_items": 8,
+      "max_detail_pages": 0,
+      "enabled": true,
+      "use_excerpt_activity_deadlines": true
+    },
+    {
+      "id": "cn_ctrip_bankoffers",
+      "name": "携程银行支付优惠清单",
+      "region": "cn",
+      "url": "https://pages.c-ctrip.com/Finance/201907/media/index.html",
+      "method": "html",
+      "timezone": "Asia/Shanghai",
+      "source_type": "official",
+      "channel_category": "travel",
+      "bank": "携程 / 合作银行",
+      "max_age_days": 90,
+      "max_items": 12,
+      "max_detail_pages": 1,
+      "enabled": true,
+      "activity_index": true,
+      "allow_undated": true,
+      "link_attributes": [
+        "weburl"
+      ],
+      "link_domains": [
+        "contents.ctrip.com"
+      ],
+      "link_pattern": "/activitysetupapp/mkt/index/[A-Za-z0-9_]+$",
+      "discovery_note": "实际优惠链接位于公开HTML的weburl属性；仅解析该明确属性与同一列表行。无发布日期则为空，银行/金额均为公开列表待核事实。"
+    }
+  ],
+  "coverage_gaps": [
+    {
+      "name": "小红书",
+      "region": "cn",
+      "channel_category": "community",
+      "url": "https://www.xiaohongshu.com/explore",
+      "status": "robots_disallow",
+      "note": "公开探索页被robots禁止；不使用登录或验证码绕过。",
+      "checked_at": "2026-11-18T14:01:23+00:00"
+    },
+    {
+      "name": "酷安",
+      "region": "cn",
+      "channel_category": "community",
+      "url": "https://www.coolapk.com/",
+      "status": "app_only_no_activity_index",
+      "note": "公开网站为App下载入口，未发现可读的金融优惠列表。",
+      "checked_at": "2026-11-18T14:01:23+00:00"
+    },
+    {
+      "name": "京东金融",
+      "region": "cn",
+      "channel_category": "payment",
+      "url": "https://m.jr.jd.com/activity/promotion/index.html",
+      "status": "robots_returned_html_or_challenge",
+      "note": "未取到可核验的公开列表；银行合作优惠仅由银行官方来源发现。",
+      "checked_at": "2026-11-18T14:01:23+00:00"
+    },
+    {
+      "name": "美团",
+      "region": "cn",
+      "channel_category": "travel",
+      "url": "https://i.meituan.com/",
+      "status": "verification_or_login_required",
+      "note": "返回验证页；HTTP200不计作采集成功。",
+      "checked_at": "2026-11-18T14:01:23+00:00"
+    },
+    {
+      "name": "飞猪",
+      "region": "cn",
+      "channel_category": "travel",
+      "url": "https://www.fliggy.com/coupon",
+      "status": "robots_unavailable",
+      "note": "未取得可用公开优惠索引。",
+      "checked_at": "2026-11-18T14:01:23+00:00"
+    },
+    {
+      "name": "中国南方航空",
+      "region": "cn",
+      "channel_category": "travel",
+      "url": "https://www.csair.com/cn/favourable/joint_promotion/",
+      "status": "javascript_only_index_no_static_links",
+      "note": "返回跳往mcms单页应用的meta刷新，不含可读静态优惠条目。",
+      "checked_at": "2026-11-18T14:01:23+00:00"
+    },
+    {
+      "name": "中国国际航空",
+      "region": "cn",
+      "channel_category": "travel",
+      "url": "https://www.airchina.com.cn/marketing-home",
+      "status": "robots_unavailable_http_418",
+      "note": "真实营销活动目录，robots检查受阻。",
+      "checked_at": "2026-11-18T14:01:23+00:00"
+    },
+    {
+      "name": "工银e生活",
+      "region": "cn",
+      "channel_category": "payment",
+      "url": "https://m.icbc.com.cn/column/1438058319784067121.html",
+      "status": "no_activity_links_in_returned_html",
+      "note": "搜索可见促销标题，但PublicClient取得的HTML只有导航，不把HTTP200计为活动采到。",
+      "checked_at": "2026-11-18T14:01:23+00:00"
+    },
+    {
+      "name": "One Mile at a Time",
+      "region": "us",
+      "channel_category": "travel",
+      "url": "https://onemileatatime.com/feed/",
+      "status": "robots_disallow",
+      "note": "公开RSS受robots限制。",
+      "checked_at": "2026-11-18T14:01:23+00:00"
+    },
+    {
+      "name": "易赏钱 MoneyBack",
+      "region": "hk",
+      "channel_category": "payment",
+      "url": "https://www.moneyback.com.hk/zh-hant/promotions",
+      "status": "app_only_no_activity_index",
+      "note": "公开页导向App，未取得可读优惠清单。",
+      "checked_at": "2026-11-18T14:01:23+00:00"
     }
   ]
 }

@@ -3,6 +3,7 @@
 import argparse
 import datetime as dt
 import json
+import hashlib
 import re
 from pathlib import Path
 from html import escape
@@ -76,6 +77,9 @@ def usable_offer(offer, day):
         return False
     if (offer.get('region') not in REGIONS or not isinstance(offer.get('title'), str)
             or not offer['title'].strip() or url.scheme not in ('http', 'https') or not url.netloc):
+        return False
+    review_expires = valid_date(offer.get('review_expires_on'))
+    if offer.get('verified') is not True and review_expires and review_expires < day:
         return False
     start, end = valid_date(offer.get('start_date')), valid_date(offer.get('end_date'))
     if (start and start > day) or (end and end < day) or (start and end and start > end):
@@ -201,9 +205,10 @@ def category(item):
     labels = {'welcome': '迎新奖励', 'welcome_bonus': '迎新奖励', 'signup': '开卡奖励',
               'business': '商业卡', 'business_card': '商业卡', 'transfer': '转点加赠',
               'transfer_bonus': '转点加赠', 'payment': '支付优惠', 'deposit': '存款与开户',
-              'benefit': '卡片权益', 'points': '积分活动', 'miles': '里程活动',
+              'benefit': '卡片权益', 'points': '积分活动', 'miles': '里程活动', 'travel': '出行优惠',
               'cashback': '返现优惠', 'bank_bonus': '银行开户', 'other': '其他活动',
-              'rare': '稀缺活动', 'value': '高价值活动'}
+              'rare': '稀缺活动', 'value': '高价值活动', 'credit_card': '卡片优惠',
+              'bank_payment': '支付优惠', 'roundup': '优惠汇总'}
     return labels.get(value.casefold(), '其他活动' if re.fullmatch(r'[A-Za-z][A-Za-z0-9_ -]*', value) else value)
 
 
@@ -288,83 +293,223 @@ def period_label(item, official=True):
 
 
 def source_link(item, community=False):
-    return f'<a class="source-link" href="{h(item["source_url"])}" target="_blank" rel="noopener noreferrer">{"查看原文" if community else "官方详情"} ↗</a>'
+    output = f'<a class="source-link" href="{h(item["source_url"])}" target="_blank" rel="noopener noreferrer">{"查看原文" if community else "官方详情"} ↗</a>'
+    for related in item.get('related_sources', []):
+        url = related.get('url', '')
+        parsed = urlparse(url)
+        if parsed.scheme in ('http', 'https') and parsed.netloc and url != item['source_url']:
+            output += f'<div class="offer-extra"><a href="{h(url)}" target="_blank" rel="noopener noreferrer">{h(related.get("label") or "相关讨论")} ↗</a></div>'
+    return output
 
 
-def reward_html(item):
+def combine_reviewed_leads(items):
+    """Only combine articles explicitly reviewed as the same offer and headline.
+
+    A changed headline is kept for a fresh review, including a changed bonus on
+    an otherwise stable URL. Unrelated bank/channel offers are never collapsed.
+    """
+    items = [dict(item) for item in items]
+    by_id = {item.get('id'): item for item in items if item.get('id')}
+    combined = set()
+    for item in items:
+        related = list(item.get('related_sources', []))
+        urls = {item['source_url']} | {value.get('url') for value in related}
+        for reference in item.get('related_leads', []):
+            candidate = by_id.get(reference.get('id'))
+            if (not candidate or candidate is item or candidate.get('verified') is True
+                    or candidate['region'] != item['region']
+                    or candidate['title'] != reference.get('title')):
+                continue
+            combined.add(candidate['id'])
+            if reference.get('include_source', True) and candidate['source_url'] not in urls:
+                related.append({'url': candidate['source_url'], 'label': candidate.get('origin') or '相关讨论'})
+                urls.add(candidate['source_url'])
+        item['related_sources'] = related
+    return [item for item in items if item.get('id') not in combined], len(combined)
+
+
+def offer_anchor(item):
+    key = '\x1f'.join(offer_identity(item))
+    return 'offer-' + item['region'] + '-' + hashlib.sha256(key.encode()).hexdigest()[:12]
+
+
+def brief_text(item, limit=115):
+    value = text_value(item.get('summary'))
+    if not value:
+        value = text_value(item.get('details') or item.get('reward'))
+        value = re.split(r'[。\n]', value, maxsplit=1)[0]
+    return value if len(value) <= limit else value[:limit].rstrip('，；、 ') + '…'
+
+
+def reward_html(item, compact=False):
     reward = text_value(item.get('reward'))
-    detail = text_value(item.get('details') or item.get('summary'))
-    output = f'<div class="offer-reward">{h(reward)}</div>' if reward else ''
-    if detail:
-        output += f'<div class="offer-detail">{h(detail)}</div>'
-    for field, label in [('eligibility', '资格'), ('channel', '参加入口')]:
-        if item.get(field):
-            output += f'<div class="offer-extra">{label}：{h(item[field])}</div>'
-    return output or '<div class="offer-detail">详见活动页面。</div>'
+    if compact:
+        brief = brief_text(item, 90)
+        if reward and reward not in brief:
+            return '<b class="offer-reward">' + h(reward) + '</b>' + ('<div class="offer-extra">' + h(brief) + '</div>' if brief else '')
+        return h(brief or reward or '查看完整活动条件。')
+    detail = text_value(item.get('details') or item.get('summary') or item.get('reward'))
+    output = '<b class="offer-reward">' + h(reward) + '</b>' if reward and reward not in detail else ''
+    output += '<div class="offer-detail">' + h(detail or '详见活动页面。') + '</div>'
+    eligibility = text_value(item.get('eligibility'))
+    if eligibility and eligibility not in detail:
+        output += '<div class="offer-extra">资格：' + h(eligibility) + '</div>'
+    return output
 
 
-def table_html(items, *, mode='all', caption='活动列表', community=False):
-    columns = {'all': [('bank', '银行 / 平台', 14), ('title', '活动', 19), ('reward', '奖励与条件', 37), ('period', '活动日期', 19), ('source', '入口', 11)],
-               'today': [('time', '今日时点', 13), ('bank', '银行 / 平台', 14), ('title', '活动', 20), ('reward', '奖励与条件', 43), ('source', '入口', 10)],
-               'deadlines': [('deadline', '截止日期', 14), ('bank', '银行 / 平台', 14), ('title', '活动', 23), ('reward', '奖励与条件', 39), ('source', '入口', 10)],
-               'comparison': [('bank', '银行 / 平台', 13), ('title', '卡片 / 活动', 20), ('reward', '当前奖励与门槛', 29), ('comparison', '历史奖励对比', 28), ('source', '入口', 10)]}[mode]
+def deadline_label(item, official=True):
+    end = valid_date(item.get('end_date'))
+    if end:
+        return end.isoformat()
+    return period_label(item, official)
+
+
+def table_html(items, *, mode='all', caption='活动列表', community=False, region=None, compact=False):
+    region = region or (items[0]['region'] if items else 'cn')
+    international = [('bank', '银行 / 平台', '14%'), ('title', '活动', '20%'),
+                     ('reward', '奖励及条件', ''), ('category', '类型', '10%'),
+                     ('deadline', '截止日期', '12%'), ('source', '入口', '8%')]
+    if mode == 'comparison':
+        columns = [('bank', '银行', '12%'), ('title', '卡种', '19%'), ('reward', '奖励及条件', '25%'),
+                   ('comparison', '史高判定', ''), ('applicability', '适用性', '12%'), ('source', '详情', '8%')]
+    elif region == 'cn' and mode == 'today':
+        columns = [('time', '时间', '64px'), ('bank', '银行', '88px'), ('title', '活动', '200px'), ('reward', '要点', '')]
+    elif region == 'cn' and mode == 'miles':
+        columns = [('bank', '主体', '96px'), ('title', '动态', '210px'), ('reward', '要点', ''), ('deadline', '日期', '110px')]
+    elif region == 'cn' and not community:
+        columns = [('bank', '银行', '88px'), ('title', '活动', '190px'), ('category', '类型', '80px'),
+                   ('reward', '要点（门槛 · 频次）', ''), ('entry', '入口', '150px'), ('deadline', '截止', '110px')]
+    else:
+        columns = international
     output = '<div class="table-scroll"><table><caption>' + h(caption) + '</caption><thead><tr>'
-    output += ''.join(f'<th scope="col" style="width:{width}%">{label}</th>' for _, label, width in columns)
+    output += ''.join(f'<th scope="col"' + (f' style="width:{width}"' if width else '') + f'>{label}</th>' for _, label, width in columns)
     output += '</tr></thead><tbody>'
     for item in items:
-        output += f'<tr data-bank="{h(item.get("bank"))}" data-category="{h(category(item))}" data-offer-id="{h(item.get("id") or item["title"])}">'
+        anchor = offer_anchor(item)
+        row_id = f' id="{anchor}"' if mode == 'all' and not community and not compact else ''
+        output += f'<tr{row_id} data-bank="{h(item.get("bank"))}" data-category="{h(category(item))}" data-deadline="{h(item.get("end_date"))}" data-offer-id="{h(item.get("id") or item["title"])}">'
         for key, label, _ in columns:
-            content = ''
-            klass = ''
+            content, klass = '', ''
             if key == 'bank':
                 content, klass = h(item.get('bank') or '银行 / 平台'), 'bank'
             elif key == 'title':
-                content = f'<span class="offer-title">{h(item["title"])}</span><div class="offer-extra">{h(category(item))}</div>'
+                if compact and not community:
+                    content = f'<a class="offer-title" href="#{anchor}">{h(item["title"])}</a>'
+                else:
+                    content = f'<b class="offer-title">{h(item["title"])}</b>'
+                if mode == 'today' and region != 'cn' and activity_time(item):
+                    content += '<div class="time-cell">' + h(activity_time(item)) + '</div>'
+            elif key == 'category':
+                content = h(category(item))
             elif key == 'reward':
-                content = reward_html(item)
+                content = reward_html(item, compact=compact)
                 if community and item.get('publication_note'):
-                    content += f'<div class="offer-extra">{h(item["publication_note"])}</div>'
-            elif key == 'period':
-                content, klass = h(period_label(item, not community)), 'date-cell'
-                if community and timestamp_label(item.get('published_at')):
-                    content += '<div class="offer-extra">原文发布：' + h(timestamp_label(item['published_at'])) + '</div>'
-            elif key == 'time':
-                content, klass = h(activity_time(item) or '持续开放'), 'time-cell'
-                if item.get('time_note'):
-                    content += '<div class="offer-extra">' + h(item['time_note']) + '</div>'
+                    content += '<div class="offer-extra">' + h(item['publication_note']) + '</div>'
             elif key == 'deadline':
-                content, klass = h(item.get('end_date')), 'date-cell'
+                content, klass = h(deadline_label(item, not community)), 'date-cell'
                 if item.get('end_time'):
                     content += '<div class="offer-extra">' + h(item['end_time']) + '</div>'
+                if community and timestamp_label(item.get('published_at')):
+                    label = '原文更新：' if item.get('publication_kind') == 'updated' else '源站标注日期：'
+                    content += '<div class="offer-extra">' + label + h(timestamp_label(item['published_at'])) + '</div>'
+            elif key == 'time':
+                content, klass = h(activity_time(item) or '全天'), 'time-cell'
+                if item.get('time_note'):
+                    content += '<div class="offer-extra">' + h(item['time_note']) + '</div>'
             elif key == 'comparison':
                 content = comparison_html(item)
-            elif key == 'source':
-                content = source_link(item, community)
-            output += f'<td data-label="{label}" class="{klass}"><div>{content}</div></td>'
+            elif key == 'applicability':
+                content = '商业信用卡' if is_business_card_offer(item) else '个人信用卡'
+            elif key in ('entry', 'source'):
+                if key == 'entry' and item.get('channel'):
+                    content = '<span class="entry-channel">' + h(item['channel']) + '</span>'
+                content += source_link(item, community)
+            output += f'<td data-label="{label}" class="{klass}">{content}</td>'
         output += '</tr>'
     return output + '</tbody></table></div>'
 
 
-def section_html(section_id, title, items, *, mode='all', community=False, note=None):
-    content = f'<section class="card" id="{section_id}"><h2>{h(title)}<span class="tag">{len(items)} 项</span></h2>'
+def section_heading(section_id, title, tag=None):
+    paths = {
+        'today': ('#c2610b', '<path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/>'),
+        'all': ('#2a639c', '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/>'),
+        'miles': ('#1d6b45', '<path d="M2 16l20-8-4 10-6-3-4 4v-5z"/>'),
+        'deadlines': ('#c0392b', '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/>'),
+    }
+    icon = ''
+    if section_id in paths:
+        color, shape = paths[section_id]
+        icon = f'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="2">{shape}</svg>'
+    return '<h2>' + icon + h(title) + (f'<span class="tag">{h(tag)}</span>' if tag else '') + '</h2>'
+
+
+def section_html(section_id, title, items, *, mode='all', community=False, note=None, tag=None, region=None, compact=True):
+    content = f'<section class="card" id="{section_id}">' + section_heading(section_id, title, tag)
     if note:
-        content += f'<p class="section-note">{h(note)}</p>'
-    content += table_html(items, mode=mode, caption=title, community=community) if items else '<div class="empty">本期暂无合适活动。</div>'
+        content += f'<p class="note">{h(note)}</p>'
+    content += table_html(items, mode=mode, caption=title, community=community, region=region, compact=compact) if items else '<p class="empty">本期暂无合适活动。</p>'
     return content + '</section>'
 
 
 def spotlight_html(region, name, items, kind):
     title = '✨ 稀缺活动' if kind == 'rare' else '💎 高价值活动'
-    content = f'<section class="spotlight {kind}" id="{region}-{kind}"><h2>{title} · {name}<span class="tag">{len(items)} 项</span></h2>'
+    content = f'<section class="spotlight {kind}" id="{region}-{kind}"><div class="spotlight-head"><h2>{title} · {name}</h2></div>'
     if not items:
-        return content + '<div class="empty">本期暂无合适活动。</div></section>'
+        empty = '本期暂无已确认的罕见回归或首次推出活动。' if kind == 'rare' else '本期暂无合适的高价值活动。'
+        return content + '<div class="empty">' + empty + '</div></section>'
     content += '<div class="spotlight-grid">'
     for item in items:
-        content += f'<article class="spot"><div class="bank-label">{h(item.get("bank"))} · {h(category(item))}</div>'
+        content += f'<article class="spot"><div class="tagline">{h(category(item))}</div>'
         if item.get('reward'):
             content += f'<div class="reward">{h(item["reward"])}</div>'
-        content += f'<h3>{h(item["title"])}</h3><p>{h(item.get("summary") or item.get("details"))}</p><p>{h(period_label(item))}</p>{source_link(item)}</article>'
+        content += f'<h3>{h(item["title"])}</h3><p>{h(brief_text(item, 100))}</p><a href="#{offer_anchor(item)}">查看活动 ↗</a></article>'
     return content + '</div></section>'
+
+
+def deadline_calendar(items, day):
+    groups = {}
+    for item in items:
+        groups.setdefault(item['end_date'], []).append(item)
+    dates = sorted(groups)
+    midpoint = (len(dates) + 1) // 2
+    content = '<section class="card" id="deadlines">' + section_heading('deadlines', '截止日历', '红色为一周内到期，尽快处理')
+    if not dates:
+        return content + '<p class="empty">本期暂无合适活动。</p></section>'
+    content += '<div class="grid2">'
+    for part in [dates[:midpoint], dates[midpoint:]]:
+        if not part:
+            continue
+        content += '<div class="table-scroll"><table><thead><tr><th scope="col" style="width:110px">截止日期</th><th scope="col">涉及活动</th></tr></thead><tbody>'
+        for date in part:
+            urgent = 0 <= (valid_date(date) - day).days <= 7
+            content += '<tr><td data-label="截止日期" class="date-cell' + (' dead' if urgent else '') + '">' + date + '</td><td data-label="涉及活动">'
+            content += '；'.join(f'{h(item.get("bank"))} <a class="offer-title" href="#{offer_anchor(item)}">{h(item["title"])}</a>' for item in groups[date])
+            content += '</td></tr>'
+        content += '</tbody></table></div>'
+    return content + '</div></section>'
+
+
+def all_section(region, name, items, day):
+    prefix = '' if region == 'cn' else region + '-'
+    tag = '权益类型：💰刷卡金/返现 · 🎫立减金/满减 · 🧧红包 · ⭐积分 · ✈️里程 · 🎟️权益' if region == 'cn' else f'{len(items)} 条 · 按银行排序'
+    content = f'<section class="card" id="{prefix}all" data-offer-filter data-report-date="{day.isoformat()}">' + section_heading(prefix + 'all', '全部活动汇总（按银行分组）', tag)
+    banks = sorted({text_value(item.get('bank')) for item in items}, key=str.casefold)
+    cats = sorted({category(item) for item in items})
+    if region == 'cn':
+        content += '<div class="toolbar"><div class="search-wrap"><label for="search">搜索活动</label><input id="search" type="search" autocomplete="off" aria-label="搜索中国大陆活动" placeholder="搜索银行、活动、门槛、入口…"></div>'
+        for kind, field_id, label, choices in [('bank', 'bankFilter', '银行 / 渠道', banks), ('category', 'typeFilter', '权益类型', cats)]:
+            content += f'<div><label for="{field_id}">{label}</label><select id="{field_id}" data-filter="{kind}"><option value="">全部{"银行" if kind == "bank" else "类型"}</option>'
+            content += ''.join(f'<option value="{h(value)}">{h(value)}</option>' for value in choices) + '</select></div>'
+        content += f'<div><label for="deadlineFilter">截止时间</label><select id="deadlineFilter" data-filter="deadline"><option value="">全部活动</option><option value="soon">7天内截止</option><option value="month">{day.month}月内截止</option><option value="dated">有明确日期</option></select></div><button id="resetFilters" data-filter-reset type="button">重置</button></div>'
+    else:
+        content += f'<div class="region-tools"><input id="{region}-search" type="search" aria-label="搜索{name}活动" placeholder="搜索银行、活动、奖励条件">'
+        for kind, suffix, label, choices in [('bank', 'bank', '银行', banks), ('category', 'type', '类型', cats)]:
+            content += f'<select id="{region}-{suffix}" data-filter="{kind}" aria-label="{label}筛选"><option value="">全部{label}</option>'
+            content += ''.join(f'<option value="{h(value)}">{h(value)}</option>' for value in choices) + '</select>'
+        content += '</div>'
+    content += '<div class="filter-meta"><span class="filter-count"></span></div><div id="' + region + '-verified">'
+    content += table_html(items, caption=name + '全部活动', region=region) if items else '<p class="empty">本期暂无合适活动。</p>'
+    return content + '</div><div class="no-results filter-empty" hidden>没有符合筛选条件的活动。</div></section>'
 
 
 def render_region(region, name, items, leads, day):
@@ -373,36 +518,36 @@ def render_region(region, name, items, leads, day):
     deadlines = sorted([item for item in items if valid_date(item.get('end_date'))],
                        key=lambda item: (item['end_date'], item.get('end_time') or '23:59', offer_sort_key(item)))
     miles = [item for item in items if re.search(r'积分|里程|转点|miles|points|transfer', category(item) + ' ' + item['title'], re.I)]
-    close = sum(0 <= (valid_date(item['end_date']) - day).days <= 7 for item in deadlines)
-    stats = [(len(items), '官网活动'), (len({item.get('bank') for item in items}), '银行 / 平台'), (len(today), '今日重点'), (close, '7日内截止')]
-    content = '<div class="stats">' + ''.join(f'<div class="stat"><div class="n">{number}</div><div class="l">{label}</div></div>' for number, label in stats) + '</div>'
-    nav = [(prefix + 'today', '今日重点'), (prefix + 'all', '全部活动'), (prefix + 'miles', '里程积分'), (prefix + 'deadlines', '截止日历')]
-    if region == 'us':
-        nav += [('us-records', '史高对比'), ('us-business', '商业卡')]
-    nav += [(region + '-collected', '社区线索')]
-    content += '<nav class="quick-nav" aria-label="' + name + '快速导航">' + ''.join(f'<a href="#{key}">{label}</a>' for key, label in nav) + '</nav>'
+    month_end = dt.date(day.year + (day.month == 12), day.month % 12 + 1, 1) - dt.timedelta(days=1)
+    month_count = sum(valid_date(item['end_date']) <= month_end for item in deadlines)
+    total = len(items) + len(leads)
+    banks = len({item.get('bank') for item in items + leads})
+    if region == 'cn':
+        stats = [(total, '本期收录活动总数', False), (banks, '覆盖银行/渠道', False),
+                 (len(today), '今日重点活动', True), (month_count, f'{month_end.month}月{month_end.day}日前截止', True)]
+        content = '<div class="stats">' + ''.join(f'<div class="stat"><div class="n{" hot" if hot else ""}">{number}</div><div class="l">{label}</div></div>' for number, label, hot in stats) + '</div>'
+    else:
+        content = f'<section class="card region-hero"><h2>{name} · 信用卡与里程活动</h2><p>活动币种：{"HKD" if region == "hk" else "USD"} · {day.year}年{day.month}月{day.day}日</p><div class="region-kpis">'
+        content += ''.join(f'<div><b>{number}</b><span>{label}</span></div>' for number, label in [(total, '活动与线索'), (banks, '银行 / 平台'), (len(deadlines), '有截止日期的活动')]) + '</div>'
+        if region == 'us':
+            content += '<p><a href="#us-records">查看史高与商业卡开卡奖励 ↓</a></p>'
+        content += '</section>'
     for kind in ('rare', 'value'):
         content += spotlight_html(region, name, [item for item in items if highlight_kind(item, day) == kind], kind)
-    content += section_html(prefix + 'today', '今日重点', today, mode='today', note='具体时点按活动当地时间；资格、名额及余量以活动页面为准。' if today else None)
-    content += f'<section class="card" id="{prefix}all" data-offer-filter><h2>全部活动<span class="tag">{len(items)} 项 · 按银行排序</span></h2>'
-    banks = sorted({text_value(item.get('bank')) for item in items}, key=str.casefold)
-    cats = sorted({category(item) for item in items})
-    content += f'<div class="region-tools"><input type="search" aria-label="搜索{name}活动" placeholder="搜索银行、活动、奖励条件">'
-    for kind, label, choices in [('bank', '银行', banks), ('category', '类型', cats)]:
-        content += f'<select data-filter="{kind}" aria-label="{label}筛选"><option value="">全部{label}</option>'
-        content += ''.join(f'<option value="{h(value)}">{h(value)}</option>' for value in choices) + '</select>'
-    content += '</div><div class="filter-meta"></div><div id="' + region + '-verified">'
-    content += table_html(items, caption=name + '全部活动') if items else '<div class="empty">本期暂无合适活动。</div>'
-    content += '</div><div class="empty filter-empty" hidden>没有符合筛选条件的活动。</div></section>'
-    content += section_html(prefix + 'miles', '里程与积分', miles)
-    content += section_html(prefix + 'deadlines', '截止日历', deadlines, mode='deadlines')
+    content += section_html(prefix + 'today', '今日必抢' if region == 'cn' else '今日必看', today, mode='today', region=region,
+                            tag='按当天时间点排序，资格与名额以活动页面为准' if region == 'cn' else '优先关注近期截止')
     if region == 'us':
         compare = [item for item in items if is_credit_card_offer(item)
                    and (item.get('comparison') or item.get('record_status') or item.get('history_source_url'))]
         business = [item for item in items if is_business_card_offer(item)]
-        content += section_html('us-records', '美国开卡奖励 · 史高对比', compare, mode='comparison')
-        content += section_html('us-business', '美国商业卡', business)
-    content += section_html(region + '-collected', '社区与活动线索', leads, community=True,
+        content += section_html('us-records', '美国史高开卡奖励 · 个人卡与商业卡', compare, mode='comparison', region=region,
+                                note='“史高”仅用于有明确历史对比依据的报价；定向奖励以个人申请页为准。')
+        content += section_html('us-business', '美国商业卡', business, region=region)
+    content += all_section(region, name, items, day)
+    content += section_html(prefix + 'miles', '里程与积分专题', miles, mode='miles', region=region,
+                            tag='重点关注：南航 / 东航 / 海航 / 亚洲万里通 / Avios' if region == 'cn' else None)
+    content += deadline_calendar(deadlines, day) if region == 'cn' else section_html(prefix + 'deadlines', '截止日历 · 按截止时间排序', deadlines, mode='deadlines', region=region)
+    content += section_html(region + '-collected', '社区与活动线索', leads, community=True, region=region, compact=False,
                             note='以下线索的活动日期与个人资格尚待确认，请先查看原文。' if leads else None)
     return content
 
@@ -423,6 +568,11 @@ def build_report(day, *, offers_path=None, collected_path=None, status_path=None
     official_sources = {source_identity(item) for item in curated
                         if usable_offer(item, day) and verified_for(item, day)}
     for item in curated + collected:
+        item = dict(item)
+        if item.get('region') == 'hk':
+            item['bank'] = {'HSBC / 汇丰': '汇丰银行 HSBC', 'American Express': 'American Express 香港',
+                            '工银亚洲': '工银亚洲 ICBC Asia', 'Citi': 'Citi Hong Kong',
+                            'DBS': '星展银行 DBS', 'BEA': '东亚银行 BEA'}.get(item.get('bank'), item.get('bank'))
         if not usable_offer(item, day):
             continue
         # Prefer the reviewed terms when a feed rediscovers the same official
@@ -435,6 +585,7 @@ def build_report(day, *, offers_path=None, collected_path=None, status_path=None
             continue
         seen.add(key)
         offers.append(item)
+    offers, combined_lead_count = combine_reviewed_leads(offers)
     offers.sort(key=lambda item: (item['region'], offer_sort_key(item)))
     verified = [item for item in offers if verified_for(item, day)]
     leads = [item for item in offers if not verified_for(item, day)]
@@ -453,12 +604,19 @@ def build_report(day, *, offers_path=None, collected_path=None, status_path=None
     if not soup.head or not soup.body or not soup.title or not header or not header.select_one('h1'):
         raise ValueError('report template is missing its head, body, title or report header')
     soup.title.string = f'银行每日线报 · {iso}'
-    header.select_one('h1').string = f'银行每日线报 · {iso}'
+    header.select_one('h1').string = '银行 & 里程活动日报 · 全球三区'
     sub = header.select_one('.sub')
     if sub:
         sub.string = f'{day.year}年{day.month}月{day.day}日 · 周' + '一二三四五六日'[day.weekday()] + ' · 中国大陆 / 中国香港 / 美国'
     for element in header.select('.chips, .notice-strong, #data-freshness'):
         element.decompose()
+    chips = soup.new_tag('div', attrs={'class': 'chips'})
+    chip = soup.new_tag('span', attrs={'class': 'chip today'})
+    chip.string = '今天是周' + '一二三四五六日'[day.weekday()] + '：' + ' · '.join(
+        name + str(len(today_items([item for item in verified if item['region'] == region], day))) + '项重点'
+        for region, name in [('cn', '大陆'), ('hk', '香港'), ('us', '美国')])
+    chips.append(chip)
+    header.append(chips)
     notice = soup.new_tag('p', attrs={'class': 'notice-strong', 'id': 'data-freshness'})
     notice.string = (('更新于 ' + timestamp_label(collected_at) + ' · ') if collected_at else '') + f'{len(verified)} 项官网活动 / {len(leads)} 条待确认线索' if offers else '暂无可确认的新活动。'
     header.append(notice)
@@ -489,6 +647,7 @@ def build_report(day, *, offers_path=None, collected_path=None, status_path=None
         'window_start': iso + 'T00:00:00+08:00', 'window_end': iso + 'T23:59:59+08:00',
         'generated_at': now.isoformat(timespec='seconds'), 'collected_at': collected_at,
         'source_status': source_status, 'verified_count': len(verified), 'collected_count': len(leads),
+        'combined_lead_count': combined_lead_count,
         'current_page_count': sum(item.get('verification_scope') == 'current_page' for item in verified),
         'regions': {region: {'verified_count': sum(item['region'] == region for item in verified),
                              'collected_count': sum(item['region'] == region for item in leads)} for region in REGIONS},
