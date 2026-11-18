@@ -19,10 +19,19 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
       - name: Install dependencies
         run: pip install beautifulsoup4
-      - name: Update report
-        run: python publish_report.py
+
+      - name: Generate and publish report
+        run: |
+          cd bank_daily_setup
+          python generate_report.py
+
+      - name: Update website
+        run: |
+          cp bank_daily_setup/index.html index.html
+          cp bank_daily_setup/latest.json latest.json
 
       - name: Commit changes
         run: |
