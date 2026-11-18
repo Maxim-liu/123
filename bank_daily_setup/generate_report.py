@@ -80,8 +80,34 @@ def usable_offer(offer, day):
     start, end = valid_date(offer.get('start_date')), valid_date(offer.get('end_date'))
     if (start and start > day) or (end and end < day) or (start and end and start > end):
         return False
+    inferred = {'weekdays': [], 'month_days': []}
+    title = offer['title']
+    if not offer.get('weekdays'):
+        english_days = {'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4,
+                        'friday': 5, 'saturday': 6, 'sunday': 7}
+        day_names = '|'.join(english_days)
+        pattern = rf'\b(?:every|each)\s+((?:{day_names})(?:\s*(?:,|&|and|/)\s*(?:{day_names}))*)\b'
+        for match in re.finditer(pattern, title, re.I):
+            # Do not mistake a range such as Monday-Friday for Monday only.
+            if re.match(r'\s*(?:through\b|to\b|[-–—])', title[match.end():], re.I):
+                continue
+            inferred['weekdays'].extend(english_days[value.casefold()]
+                                         for value in re.findall(day_names, match[1], re.I))
+        chinese_days = {value: number for number, value in enumerate('一二三四五六日', 1)}
+        chinese_days['天'] = 7
+        for match in re.finditer(r'每(?:周|星期)\s*([一二三四五六日天](?:\s*[、,，/和及]\s*[一二三四五六日天])*)', title):
+            if re.match(r'\s*(?:至|到|[-–—])', title[match.end():]):
+                continue
+            inferred['weekdays'].extend(chinese_days[value] for value in match[1] if value in chinese_days)
+    if not offer.get('month_days'):
+        for match in re.finditer(r'每月\s*(\d{1,2})\s*[日号]', title):
+            # A lone calendar date or a multi-day range is not a single-day recurrence.
+            if re.match(r'\s*(?:至|到|[-–—]|[、,，/和及]\s*\d)', title[match.end():]):
+                continue
+            if 1 <= int(match[1]) <= 31:
+                inferred['month_days'].append(int(match[1]))
     for field, number in [('weekdays', day.isoweekday()), ('month_days', day.day)]:
-        values = offer.get(field)
+        values = offer.get(field) or inferred[field]
         if values and number not in [int(x) for x in values if str(x).isdigit()]:
             return False
     return True

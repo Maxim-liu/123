@@ -198,6 +198,37 @@ class PublicationTests(unittest.TestCase):
                          ['Monthly 19 morning', 'Thursday afternoon'])
         self.assertIn('周四', page.select_one('header .sub').get_text())
 
+    def test_original_onepay_wednesday_community_lead_is_not_a_thursday_offer(self):
+        title = ('[Extended 1/15/27] OnePay: $1 Cashback Per Gallon Of Gas Every Wednesday '
+                 '(50 Gallons, Two Redemptions Per Day)')
+        self.seed([self.sample(title=title, bank='多家机构 / 原文为准', source_type='community',
+                               source_url='https://www.doctorofcredit.com/onepay-1-cashback-per-gallon-of-gas-every-wednesday-50-gallons-two-redemptions-per-day/',
+                               published_at='2026-11-18T05:01:18+00:00')])
+        thursday = BeautifulSoup(self.build().read_text(encoding='utf-8'), 'html.parser')
+        self.assertNotIn(title, thursday.get_text())
+        wednesday_report = build_report(dt.date(2026, 11, 18), offers_path=self.curated,
+                                        collected_path=self.collected, status_path=self.status,
+                                        template_path=TEMPLATE, output_dir=self.base / 'wednesday', now=NOW)
+        wednesday = BeautifulSoup(wednesday_report.read_text(encoding='utf-8'), 'html.parser')
+        self.assertIn(title, wednesday.select_one('#us-collected').get_text())
+        self.assertNotIn(title, wednesday.select_one('#us-all').get_text())
+
+    def test_only_explicit_title_recurrences_filter_community_leads(self):
+        excluded = ['Each Monday cashback', '每周三返现活动', '每星期日积分活动', '每月18日银行优惠']
+        retained = ['Each Thursday cashback', '每星期四银行优惠', '每月19号积分活动',
+                    'Wednesday 11/18 bank offer news', '11月18日公布银行优惠',
+                    'Every Monday and Thursday cashback', '每周三、四返现',
+                    'Every Monday-Friday cashback', '每月18日至20日返现']
+        self.seed([self.sample(title=title) for title in excluded + retained]
+                  + [self.sample(title='Every Wednesday explicit Thursday schedule', weekdays=[4]),
+                     self.sample(title='每月18日标题已更正为19日', month_days=[19])])
+        page = BeautifulSoup(self.build().read_text(encoding='utf-8'), 'html.parser')
+        content = page.select_one('#us-collected').get_text()
+        for title in excluded:
+            self.assertNotIn(title, content)
+        for title in retained + ['Every Wednesday explicit Thursday schedule', '每月18日标题已更正为19日']:
+            self.assertIn(title, content)
+
     def test_previous_one_time_release_is_not_a_new_daily_drop(self):
         self.write(self.curated, [self.sample(title='Remaining quota', verified=True,
                                              start_date='2026-11-18', end_date='2026-11-30',

@@ -1,9 +1,9 @@
 {
   "collected_at": "2026-11-18T13:38:39+00:00",
-  "collected_count": 25,
+  "collected_count": 24,
   "current_page_count": 4,
   "date": "2026-11-19",
-  "generated_at": "2026-11-18T21:40:25+08:00",
+  "generated_at": "2026-11-18T21:43:55+08:00",
   "regions": {
     "cn": {
       "collected_count": 2,
@@ -14,7 +14,7 @@
       "verified_count": 9
     },
     "us": {
-      "collected_count": 22,
+      "collected_count": 21,
       "verified_count": 8
     }
   },
@@ -25,5 +25,5 @@
   "verified_count": 38,
   "window_end": "2026-11-19T23:59:59+08:00",
   "window_start": "2026-11-19T00:00:00+08:00",
-  "revision": "88ccf3068436ddc32264"
+  "revision": "cb46bfb900486c8a9c75"
 }
