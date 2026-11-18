@@ -1,13 +1,13 @@
 {
-  "collected_at": "2026-11-18T13:38:39+00:00",
+  "collected_at": "2026-11-18T21:59:53+08:00",
   "collected_count": 24,
   "current_page_count": 4,
   "date": "2026-11-19",
-  "generated_at": "2026-11-18T21:43:55+08:00",
+  "generated_at": "2026-11-18T22:01:05+08:00",
   "regions": {
     "cn": {
       "collected_count": 2,
-      "verified_count": 21
+      "verified_count": 29
     },
     "hk": {
       "collected_count": 1,
@@ -22,8 +22,8 @@
   "schema_version": 3,
   "source_status": "partial",
   "timezone": "Asia/Shanghai",
-  "verified_count": 38,
+  "verified_count": 46,
   "window_end": "2026-11-19T23:59:59+08:00",
   "window_start": "2026-11-19T00:00:00+08:00",
-  "revision": "cb46bfb900486c8a9c75"
+  "revision": "7c82823c100f5981c54b"
 }

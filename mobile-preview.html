@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>银行每日线报 · 手机布局测试</title>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:18px;background:#edf1f6;color:#22384e;font:14px/1.5 system-ui,sans-serif}header{max-width:780px;margin:0 auto 14px;display:flex;align-items:center;justify-content:space-between;gap:20px}h1{font-size:16px;margin:0}p{margin:2px 0 0;color:#61748b;font-size:12px}button{background:white;border:1px solid #b8c9dc;border-radius:7px;padding:7px 10px;cursor:pointer;color:#20486d}button[aria-pressed=true]{color:white;background:#1c4d83}nav{display:flex;gap:6px}.device{width:390px;margin:auto;background:#fff;border:1px solid #b9c5d4;border-radius:22px;overflow:hidden;box-shadow:0 8px 35px #253e5d22}iframe{display:block;width:100%;height:844px;border:0;background:white}@media(max-width:500px){body{padding:8px}header{display:block}nav{margin-top:10px}.device{max-width:100%}}
+</style>
+</head>
+<body><header><div><h1>银行每日线报 · 手机预览</h1><p>与待发布首页使用同一份内容</p></div><nav aria-label="预览宽度"><button data-width="375" aria-pressed="false">375 px</button><button data-width="390" aria-pressed="true">390 px</button><button data-width="430" aria-pressed="false">430 px</button></nav></header><main class="device"><iframe id="report-preview" src="./index.html" title="手机日报"></iframe></main>
+<script>document.querySelectorAll('[data-width]').forEach(button=>button.addEventListener('click',()=>{document.querySelector('.device').style.width=button.dataset.width+'px';document.querySelectorAll('[data-width]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)))}));</script>
+</body></html>
