@@ -289,8 +289,8 @@ class PublicClient:
         opener = urllib.request.build_opener() if robots else urllib.request.build_opener(NoRedirect())
         try:
             with opener.open(req, timeout=self.timeout) as response:
-                body = response.read(2_500_001)
-                if len(body) > 2_500_000:
+                body = response.read(8_000_001)
+                if len(body) > 8_000_000:
                     raise FetchError("response_size_limit")
                 charset = response.headers.get_content_charset() or "utf-8"
                 if charset.lower() in ("gb2312", "gbk"):
