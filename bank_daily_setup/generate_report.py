@@ -620,6 +620,41 @@ def build_report(day, *, offers_path=None, collected_path=None, status_path=None
     notice = soup.new_tag('p', attrs={'class': 'notice-strong', 'id': 'data-freshness'})
     notice.string = (('更新于 ' + timestamp_label(collected_at) + ' · ') if collected_at else '') + f'{len(verified)} 项官网活动 / {len(leads)} 条待确认线索' if offers else '暂无可确认的新活动。'
     header.append(notice)
+    # Compact cross-region shortlist. Only verified, currently applicable offers
+    # qualify; no guessed monetary ranking or unverified community promotions.
+    shortlist = sorted(verified, key=lambda item: (
+        0 if highlight_kind(item, day) == 'rare' else 1 if highlight_kind(item, day) == 'value' else 2,
+        0 if valid_date(item.get('end_date')) and 0 <= (valid_date(item['end_date']) - day).days <= 3 else 1,
+        item.get('end_date') or '9999-12-31', offer_sort_key(item)))[:10]
+    nav = soup.select_one('nav.quick-nav')
+    if nav:
+        featured = soup.new_tag('section', attrs={'class': 'card', 'id': 'best-today',
+                                                  'aria-label': '今日最值得参加的活动'})
+        heading = soup.new_tag('h2')
+        heading.string = '今日最值得参加的活动'
+        featured.append(heading)
+        intro = soup.new_tag('p')
+        intro.string = '仅列已核实且本期适用的活动；优先稀缺、高价值和临近截止。具体收益与资格请核对原文，不代表按金额排序。'
+        featured.append(intro)
+        if shortlist:
+            listing = soup.new_tag('ol')
+            for item in shortlist:
+                li = soup.new_tag('li')
+                link = soup.new_tag('a', href=item['source_url'], target='_blank', rel='noopener noreferrer')
+                link.string = f"{REGIONS[item['region']]} · {item.get('bank') or '相关平台'} · {item['title']}"
+                li.append(link)
+                end = valid_date(item.get('end_date'))
+                if end:
+                    note = soup.new_tag('small')
+                    note.string = ' · 截止 ' + end.isoformat()
+                    li.append(note)
+                listing.append(li)
+            featured.append(listing)
+        else:
+            empty = soup.new_tag('p')
+            empty.string = '本期暂无符合核实标准的精选活动，请继续查看各地区完整日报及待确认线索。'
+            featured.append(empty)
+        nav.insert_after(featured)
     for region, name in REGIONS.items():
         panel = soup.select_one(f'#region-{region}')
         if panel is None:
