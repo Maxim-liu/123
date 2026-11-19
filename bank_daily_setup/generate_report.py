@@ -395,7 +395,17 @@ def table_html(items, *, mode='all', caption='活动列表', community=False, re
     output = '<div class="table-scroll"><table class="offers-table mode-' + h(mode) + (' community-table' if community else '') + '"><caption>' + h(caption) + '</caption><thead><tr>'
     output += ''.join(f'<th scope="col"' + (f' style="width:{width}"' if width else '') + f'>{label}</th>' for _, label, width in columns)
     output += '</tr></thead><tbody>'
+    last_time_group = None
     for item in items:
+        if mode == 'chronological':
+            clock = activity_time(item)
+            hour = int(clock[:2]) if clock else None
+            time_group = ('未注明具体时间' if hour is None else
+                          '上午（00:00–11:59）' if hour < 12 else
+                          '下午（12:00–17:59）' if hour < 18 else '晚上（18:00–23:59）')
+            if time_group != last_time_group:
+                output += '<tr class="time-group-heading"><th scope="rowgroup" colspan="' + str(len(columns)) + '">' + h(time_group) + '</th></tr>'
+                last_time_group = time_group
         anchor = offer_anchor(item)
         row_id = f' id="{anchor}"' if mode == 'all' and not community and not compact else ''
         output += f'<tr{row_id} data-bank="{h(item.get("bank"))}" data-category="{h(category(item))}" data-deadline="{h(item.get("end_date"))}" data-offer-id="{h(item.get("id") or item["title"])}">'
@@ -521,7 +531,7 @@ def all_section(region, name, items, day):
     content += '</div><div class="no-results filter-empty" hidden>没有符合筛选条件的活动。</div></section>'
     timed = sorted(items, key=lambda item: (display_activity_time(item) == '未注明', display_activity_time(item), offer_sort_key(item)))
     content += '<section class="card" id="' + prefix + 'all-by-time">' + section_heading(prefix + 'all-by-time', '全部活动汇总（按时间分组）')
-    content += '<p class="note">有明确时刻的活动按时间先后排列，未注明具体时刻的活动放在末尾；活动截止日期单独显示。</p>'
+    content += '<p class="note">按上午、下午、晚上及未注明时间分组，组内按时间先后排列；活动截止日期单独显示。</p>'
     content += table_html(timed, mode='chronological', caption=name + '按时间汇总', region=region) if timed else '<p class="empty">本期暂无合适活动。</p>'
     return content + '</section>'
 
