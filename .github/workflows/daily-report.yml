@@ -1,4 +1,5 @@
 name: Daily Report
+# Immediate publish after verified activity-entry-link release.
 # Immediate refresh after verified international layout rollout.
 
 on:
