@@ -56,7 +56,7 @@ class ActivityEntryLinkTests(unittest.TestCase):
         item={'region':'us','bank':'银行','title':'测试活动','source_url':'https://example.org/terms'}
         soup=BeautifulSoup(table_html([item],region='us'),'html.parser')
         self.assertFalse(soup.select('.activity-entry'))
-        self.assertEqual(soup.select_one('.source-link').get_text(strip=True),'查看活动详情↗')
+        self.assertEqual(soup.select_one('.source-link').get_text(strip=True),'查看活动详情 ↗')
     def test_unsafe_entry_url_is_rejected(self):
         item={'region':'hk','bank':'银行','title':'测试活动','source_url':'https://example.org/terms','entry_url':'javascript:alert(1)'}
         soup=BeautifulSoup(table_html([item],region='hk'),'html.parser')
