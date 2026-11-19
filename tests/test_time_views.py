@@ -1,0 +1,35 @@
+import datetime as dt
+import unittest
+from bs4 import BeautifulSoup
+from bank_daily_setup.generate_report import table_html, all_section, display_activity_time
+
+class TimeViewsTests(unittest.TestCase):
+    def setUp(self):
+        self.day = dt.date(2026, 11, 19)
+        self.items = [
+            {'region':'cn','bank':'测试银行','title':'晚间活动','source_url':'https://example.org/a','time':'20:00-21:00','time_note':'每天限量，需报名','end_date':'2026-11-25'},
+            {'region':'cn','bank':'测试银行','title':'上午活动','source_url':'https://example.org/b','time':'09:30','end_date':'2026-11-24'},
+            {'region':'cn','bank':'其他银行','title':'未注明时间','source_url':'https://example.org/c','end_date':'2026-11-26'},
+        ]
+    def test_time_only(self):
+        self.assertEqual(display_activity_time(self.items[0]), '20:00–21:00')
+        self.assertEqual(display_activity_time(self.items[2]), '未注明')
+        soup=BeautifulSoup(table_html(self.items,mode='today',region='cn'),'html.parser')
+        self.assertNotIn('每天限量',soup.get_text())
+        self.assertEqual(soup.select_one('tbody tr td').get_text(strip=True),'20:00–21:00')
+    def test_both_summaries_and_grouping(self):
+        soup=BeautifulSoup(all_section('cn','中国大陆',self.items,self.day),'html.parser')
+        self.assertIsNotNone(soup.select_one('#all'))
+        self.assertIsNotNone(soup.select_one('#all-by-time'))
+        self.assertEqual(len(soup.select('#all thead th')),7)
+        labels=[x.get_text(strip=True) for x in soup.select('#all-by-time .time-group-heading')]
+        self.assertEqual(labels,['上午（00:00–11:59）','晚上（18:00–23:59）','未注明具体时间'])
+        self.assertEqual(len(soup.select('#all-by-time tbody tr[data-offer-id]')),3)
+    def test_hk_us_time_column(self):
+        for region in ('hk','us'):
+            item=dict(self.items[0],region=region)
+            soup=BeautifulSoup(table_html([item],region=region),'html.parser')
+            self.assertEqual(len(soup.select('thead th')),7)
+            self.assertEqual(soup.select('thead th')[4].get_text(strip=True),'时间')
+
+if __name__=='__main__': unittest.main()

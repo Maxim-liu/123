@@ -1,0 +1,22 @@
+name: Validate offer time views
+on:
+  push:
+    branches: [feat/offer-time-and-chronological]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'beautifulsoup4>=4.12,<5'
+      - run: python -m unittest discover -s tests -v
+      - run: node --test bank_daily_setup/test_pwa.cjs
+      - name: Verify time-only cells and chronological groups
+        run: python -m unittest tests.test_time_views -v
+      - name: Render preview without publishing
+        run: python bank_daily_setup/generate_report.py --date 2026-11-19 --no-publish --output-dir /tmp/bank-preview
