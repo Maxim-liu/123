@@ -381,7 +381,7 @@ def table_html(items, *, mode='all', caption='活动列表', community=False, re
                    ('reward', '要点（门槛 · 频次）', ''), ('entry', '入口', '150px'), ('deadline', '截止', '110px')]
     else:
         columns = international
-    output = '<div class="table-scroll"><table><caption>' + h(caption) + '</caption><thead><tr>'
+    output = '<div class="table-scroll"><table class="offers-table mode-' + h(mode) + (' community-table' if community else '') + '"><caption>' + h(caption) + '</caption><thead><tr>'
     output += ''.join(f'<th scope="col"' + (f' style="width:{width}"' if width else '') + f'>{label}</th>' for _, label, width in columns)
     output += '</tr></thead><tbody>'
     for item in items:
