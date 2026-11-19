@@ -33,3 +33,14 @@ class TimeViewsTests(unittest.TestCase):
             self.assertEqual(soup.select('thead th')[4].get_text(strip=True),'时间')
 
 if __name__=='__main__': unittest.main()
+
+
+class InternationalLayoutTests(unittest.TestCase):
+    def test_region_columns_match_mainland_order(self):
+        for region in ('cn','hk','us'):
+            item={'region':region,'bank':'银行','title':'活动','reward':'奖励','time':'10:00','end_date':'2026-11-30','source_url':'https://example.org'}
+            soup=BeautifulSoup(table_html([item],region=region),'html.parser')
+            labels=[x.get_text(strip=True) for x in soup.select('thead th')]
+            self.assertEqual(labels.index('时间'),4)
+            self.assertEqual(len(labels),7)
+            self.assertEqual(labels.index('类型'),2)

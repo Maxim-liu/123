@@ -144,6 +144,23 @@ body{background:linear-gradient(145deg,#f1f6fd 0%,#f8fafc 48%,#eef3f9 100%);colo
 .table-scroll .offers-table.mode-chronological th:nth-child(6){width:140px!important}
 .table-scroll .offers-table .time-group-heading th{position:static!important;background:#eaf2fa;font-weight:700;text-align:left;padding:10px 12px}
 .table-scroll .offers-table .time-cell{white-space:nowrap;overflow-wrap:normal}
+
+/* Keep Hong Kong and US summaries aligned with mainland and contain long content. */
+.region-panel,.region-panel section,.region-panel .spotlight,.region-panel .spot,.region-panel .region-hero,.region-panel .region-kpis,.region-panel .region-tools{min-width:0;max-width:100%}
+.region-panel .card,.region-panel .spotlight,.region-panel .spot{overflow-wrap:anywhere;word-break:normal}
+.region-panel .table-scroll{display:block;width:100%;max-width:100%;overflow-x:auto;overflow-y:hidden}
+.region-panel .table-scroll .offers-table{max-width:none;table-layout:fixed}
+.region-panel .offers-table td,.region-panel .offers-table th{overflow-wrap:anywhere;word-break:normal;white-space:normal;min-width:0}
+.region-panel .offers-table td a,.region-panel .offers-table td .offer-extra,.region-panel .offers-table td .entry-channel{overflow-wrap:anywhere;word-break:break-word;max-width:100%}
+.region-panel .offers-table td.time-cell,.region-panel .offers-table td.date-cell{white-space:normal;overflow-wrap:normal}
+.region-panel .offers-table.mode-all:not(.community-table) th:nth-child(1){width:110px!important}
+.region-panel .offers-table.mode-all:not(.community-table) th:nth-child(2){width:255px!important}
+.region-panel .offers-table.mode-all:not(.community-table) th:nth-child(3){width:85px!important}
+.region-panel .offers-table.mode-all:not(.community-table) th:nth-child(4){width:375px!important}
+.region-panel .offers-table.mode-all:not(.community-table) th:nth-child(5){width:95px!important}
+.region-panel .offers-table.mode-all:not(.community-table) th:nth-child(6){width:200px!important}
+.region-panel .offers-table.mode-all:not(.community-table) th:nth-child(7){width:130px!important}
+@media(max-width:760px){.region-panel .region-tools{grid-template-columns:minmax(0,1fr)}.region-panel .region-tools input,.region-panel .region-tools select{min-width:0;width:100%}.region-panel .spotlight-grid{grid-template-columns:minmax(0,1fr)}}
 </style><link href="./manifest.webmanifest" rel="manifest"/><link href="./icons/icon-192.png" rel="apple-touch-icon"/><meta content="#132c50" name="theme-color"/><meta content="yes" name="apple-mobile-web-app-capable"/><meta content="default" name="apple-mobile-web-app-status-bar-style"/><meta content="银行线报" name="apple-mobile-web-app-title"/><meta content="中港美银行信用卡、里程、稀缺活动及高价值活动每日线报" name="description"/></head><body><main class="wrap"><header class="top">
 <h1>银行 &amp; 里程活动日报 · 全球三区</h1>
 <div class="sub"></div>

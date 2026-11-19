@@ -375,9 +375,9 @@ def deadline_label(item, official=True):
 
 def table_html(items, *, mode='all', caption='活动列表', community=False, region=None, compact=False):
     region = region or (items[0]['region'] if items else 'cn')
-    international = [('bank', '银行 / 平台', '14%'), ('title', '活动', '20%'),
-                     ('reward', '奖励及条件', ''), ('category', '类型', '10%'),
-                     ('time', '时间', '90px'), ('deadline', '截止日期', '12%'), ('source', '入口', '8%')]
+    international = [('bank', '银行 / 平台', '110px'), ('title', '活动', '255px'),
+                     ('category', '类型', '85px'), ('reward', '奖励及条件', '375px'),
+                     ('time', '时间', '95px'), ('source', '入口', '200px'), ('deadline', '截止日期', '130px')]
     if mode == 'comparison':
         columns = [('bank', '银行', '12%'), ('title', '卡种', '19%'), ('reward', '奖励及条件', '25%'),
                    ('comparison', '史高判定', ''), ('applicability', '适用性', '12%'), ('source', '详情', '8%')]
