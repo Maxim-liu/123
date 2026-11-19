@@ -172,7 +172,7 @@ def activity_time(item):
 def display_activity_time(item):
     """Time column contains time only; never explanatory notes or dates."""
     value = text_value(item.get('time') or item.get('start_time'))
-    times = re.findall(r'(?<!\\d)(?:[01]?\\d|2[0-3]):[0-5]\\d(?!\\d)', value)
+    times = re.findall(r'(?<!\d)(?:[01]?\d|2[0-3]):[0-5]\d(?!\d)', value)
     if times:
         return '–'.join(f'{int(x.split(":")[0]):02d}:{x.split(":")[1]}' for x in times[:2])
     return '未注明'
@@ -532,7 +532,7 @@ def all_section(region, name, items, day):
     timed = sorted(items, key=lambda item: (display_activity_time(item) == '未注明', display_activity_time(item), offer_sort_key(item)))
     content += '<section class="card" id="' + prefix + 'all-by-time">' + section_heading(prefix + 'all-by-time', '全部活动汇总（按时间分组）')
     content += '<p class="note">按上午、下午、晚上及未注明时间分组，组内按时间先后排列；活动截止日期单独显示。</p>'
-    content += table_html(timed, mode='chronological', caption=name + '按时间汇总', region=region) if timed else '<p class="empty">本期暂无合适活动。</p>'
+    content += table_html(timed, mode='chronological', caption=name + '按时间汇总', region=region, compact=True) if timed else '<p class="empty">本期暂无合适活动。</p>'
     return content + '</section>'
 
 
