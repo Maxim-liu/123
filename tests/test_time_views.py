@@ -44,3 +44,20 @@ class InternationalLayoutTests(unittest.TestCase):
             self.assertEqual(labels.index('时间'),4)
             self.assertEqual(len(labels),7)
             self.assertEqual(labels.index('类型'),2)
+
+
+class ActivityEntryLinkTests(unittest.TestCase):
+    def test_direct_entry_and_official_source_are_distinct(self):
+        item={'region':'cn','bank':'银行','title':'测试活动','source_url':'https://example.org/terms','entry_url':'https://example.org/join','time':'10:00'}
+        soup=BeautifulSoup(table_html([item],region='cn'),'html.parser')
+        self.assertEqual(soup.select_one('.activity-entry')['href'],'https://example.org/join')
+        self.assertEqual(soup.select_one('.source-link')['href'],'https://example.org/terms')
+    def test_source_only_is_not_misrepresented_as_registration(self):
+        item={'region':'us','bank':'银行','title':'测试活动','source_url':'https://example.org/terms'}
+        soup=BeautifulSoup(table_html([item],region='us'),'html.parser')
+        self.assertFalse(soup.select('.activity-entry'))
+        self.assertEqual(soup.select_one('.source-link').get_text(strip=True),'查看活动详情↗')
+    def test_unsafe_entry_url_is_rejected(self):
+        item={'region':'hk','bank':'银行','title':'测试活动','source_url':'https://example.org/terms','entry_url':'javascript:alert(1)'}
+        soup=BeautifulSoup(table_html([item],region='hk'),'html.parser')
+        self.assertFalse(soup.select('.activity-entry'))

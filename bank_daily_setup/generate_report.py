@@ -301,14 +301,29 @@ def period_label(item, official=True):
     return label
 
 
+def safe_external_url(value):
+    if not isinstance(value, str):
+        return None
+    parsed = urlparse(value.strip())
+    return value.strip() if parsed.scheme in ('http', 'https') and parsed.netloc else None
+
+
 def source_link(item, community=False):
-    output = f'<a class="source-link" href="{h(item["source_url"])}" target="_blank" rel="noopener noreferrer">{"查看原文" if community else "官方详情"} ↗</a>'
+    """Show a direct activity entry only when the source supplies a genuine URL."""
+    source = safe_external_url(item.get('source_url'))
+    direct = next((url for key in ('entry_url', 'registration_url', 'signup_url', 'activity_url', 'apply_url')
+                   if (url := safe_external_url(item.get(key)))), None)
+    output = ''
+    if direct:
+        output += f'<a class="activity-entry" href="{h(direct)}" target="_blank" rel="noopener noreferrer">进入活动 ↗</a>'
+    if source:
+        label = '查看原文' if community else ('官方详情' if direct else '查看活动详情')
+        output += ('<div class="offer-extra">' if direct else '') + f'<a class="source-link" href="{h(source)}" target="_blank" rel="noopener noreferrer">{label} ↗</a>' + ('</div>' if direct else '')
     for related in item.get('related_sources', []):
-        url = related.get('url', '')
-        parsed = urlparse(url)
-        if parsed.scheme in ('http', 'https') and parsed.netloc and url != item['source_url']:
+        url = safe_external_url(related.get('url', ''))
+        if url and url not in (source, direct):
             output += f'<div class="offer-extra"><a href="{h(url)}" target="_blank" rel="noopener noreferrer">{h(related.get("label") or "相关讨论")} ↗</a></div>'
-    return output
+    return output or '<span class="offer-extra">暂无可核实链接</span>'
 
 
 def combine_reviewed_leads(items):
