@@ -1,13 +1,13 @@
 {
-  "collected_at": "2026-11-18T21:12:15+00:00",
-  "collected_count": 81,
-  "combined_lead_count": 4,
+  "collected_at": "2026-11-19T02:19:50+00:00",
+  "collected_count": 80,
+  "combined_lead_count": 3,
   "current_page_count": 4,
   "date": "2026-11-19",
-  "generated_at": "2026-11-19T05:12:37+08:00",
+  "generated_at": "2026-11-19T10:20:12+08:00",
   "regions": {
     "cn": {
-      "collected_count": 35,
+      "collected_count": 36,
       "verified_count": 37
     },
     "hk": {
@@ -15,7 +15,7 @@
       "verified_count": 13
     },
     "us": {
-      "collected_count": 29,
+      "collected_count": 27,
       "verified_count": 8
     }
   },
@@ -26,5 +26,5 @@
   "verified_count": 58,
   "window_end": "2026-11-19T23:59:59+08:00",
   "window_start": "2026-11-19T00:00:00+08:00",
-  "revision": "ffeab94218a37dfacef1"
+  "revision": "3e35cdb45d8793f4fce8"
 }
