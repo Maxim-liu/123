@@ -169,6 +169,15 @@ def activity_time(item):
     return None
 
 
+def display_activity_time(item):
+    """Time column contains time only; never explanatory notes or dates."""
+    value = text_value(item.get('time') or item.get('start_time'))
+    times = re.findall(r'(?<!\\d)(?:[01]?\\d|2[0-3]):[0-5]\\d(?!\\d)', value)
+    if times:
+        return '–'.join(f'{int(x.split(":")[0]):02d}:{x.split(":")[1]}' for x in times[:2])
+    return '未注明'
+
+
 def applies_today(item, day):
     for field, number in [('weekdays', day.isoweekday()), ('month_days', day.day)]:
         values = item.get(field)
@@ -368,17 +377,19 @@ def table_html(items, *, mode='all', caption='活动列表', community=False, re
     region = region or (items[0]['region'] if items else 'cn')
     international = [('bank', '银行 / 平台', '14%'), ('title', '活动', '20%'),
                      ('reward', '奖励及条件', ''), ('category', '类型', '10%'),
-                     ('deadline', '截止日期', '12%'), ('source', '入口', '8%')]
+                     ('time', '时间', '90px'), ('deadline', '截止日期', '12%'), ('source', '入口', '8%')]
     if mode == 'comparison':
         columns = [('bank', '银行', '12%'), ('title', '卡种', '19%'), ('reward', '奖励及条件', '25%'),
                    ('comparison', '史高判定', ''), ('applicability', '适用性', '12%'), ('source', '详情', '8%')]
+    elif mode == 'chronological':
+        columns = [('time', '时间', '90px'), ('bank', '银行 / 平台', '110px'), ('title', '活动', '260px'), ('reward', '奖励及条件', ''), ('deadline', '截止日期', '120px'), ('source', '入口', '120px')]
     elif region == 'cn' and mode == 'today':
         columns = [('time', '时间', '64px'), ('bank', '银行', '88px'), ('title', '活动', '200px'), ('reward', '要点', '')]
     elif region == 'cn' and mode == 'miles':
         columns = [('bank', '主体', '96px'), ('title', '动态', '210px'), ('reward', '要点', ''), ('deadline', '日期', '110px')]
     elif region == 'cn' and not community:
         columns = [('bank', '银行', '88px'), ('title', '活动', '190px'), ('category', '类型', '80px'),
-                   ('reward', '要点（门槛 · 频次）', ''), ('entry', '入口', '150px'), ('deadline', '截止', '110px')]
+                   ('reward', '要点（门槛 · 频次）', ''), ('time', '时间', '90px'), ('entry', '入口', '150px'), ('deadline', '截止', '110px')]
     else:
         columns = international
     output = '<div class="table-scroll"><table class="offers-table mode-' + h(mode) + (' community-table' if community else '') + '"><caption>' + h(caption) + '</caption><thead><tr>'
@@ -413,9 +424,7 @@ def table_html(items, *, mode='all', caption='活动列表', community=False, re
                     label = '原文更新：' if item.get('publication_kind') == 'updated' else '源站标注日期：'
                     content += '<div class="offer-extra">' + label + h(timestamp_label(item['published_at'])) + '</div>'
             elif key == 'time':
-                content, klass = h(activity_time(item) or '全天'), 'time-cell'
-                if item.get('time_note'):
-                    content += '<div class="offer-extra">' + h(item['time_note']) + '</div>'
+                content, klass = h(display_activity_time(item)), 'time-cell'
             elif key == 'comparison':
                 content = comparison_html(item)
             elif key == 'applicability':
@@ -509,7 +518,12 @@ def all_section(region, name, items, day):
         content += '</div>'
     content += '<div class="filter-meta"><span class="filter-count"></span></div><div id="' + region + '-verified">'
     content += table_html(items, caption=name + '全部活动', region=region) if items else '<p class="empty">本期暂无合适活动。</p>'
-    return content + '</div><div class="no-results filter-empty" hidden>没有符合筛选条件的活动。</div></section>'
+    content += '</div><div class="no-results filter-empty" hidden>没有符合筛选条件的活动。</div></section>'
+    timed = sorted(items, key=lambda item: (display_activity_time(item) == '未注明', display_activity_time(item), offer_sort_key(item)))
+    content += '<section class="card" id="' + prefix + 'all-by-time">' + section_heading(prefix + 'all-by-time', '全部活动汇总（按时间分组）')
+    content += '<p class="note">有明确时刻的活动按时间先后排列，未注明具体时刻的活动放在末尾；活动截止日期单独显示。</p>'
+    content += table_html(timed, mode='chronological', caption=name + '按时间汇总', region=region) if timed else '<p class="empty">本期暂无合适活动。</p>'
+    return content + '</section>'
 
 
 def render_region(region, name, items, leads, day):
