@@ -1,7 +1,7 @@
 name: Validate offer time views
 on:
   push:
-    branches: [feat/offer-time-and-chronological]
+    branches: [feat/offer-time-and-chronological, fix/international-layout-overflow]
   workflow_dispatch:
 permissions:
   contents: read
