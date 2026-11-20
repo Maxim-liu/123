@@ -1,7 +1,7 @@
 name: Validate offer time views
 on:
   push:
-    branches: [feat/offer-time-and-chronological, fix/international-layout-overflow, feat/activity-entry-links]
+    branches: [feat/offer-time-and-chronological, fix/international-layout-overflow, feat/activity-entry-links, maintenance/2026-11-20-source-audit]
   workflow_dispatch:
 permissions:
   contents: read
@@ -18,5 +18,7 @@ jobs:
       - run: node --test bank_daily_setup/test_pwa.cjs
       - name: Verify time-only cells and chronological groups
         run: python -m unittest tests.test_time_views -v
+      - name: Audit current coverage without external requests
+        run: python bank_daily_setup/audit_sources.py --out /tmp/source-audit.json
       - name: Render preview without publishing
         run: python bank_daily_setup/generate_report.py --date 2026-11-19 --no-publish --output-dir /tmp/bank-preview
