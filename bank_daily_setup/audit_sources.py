@@ -8,6 +8,7 @@ import argparse
 import collections
 import datetime as dt
 import json
+import os
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -36,7 +37,8 @@ def duplicates(items, key_fn):
     return sum(n - 1 for n in counts.values() if n > 1)
 
 
-def build(base, edition=None):
+def build(base, edition=None, event_name=None):
+    event_name = event_name or os.environ.get('GITHUB_EVENT_NAME', 'unknown')
     sources = load(base / "sources.json", {}).get("sources", [])
     registry = load(base / "source_registry.json", {}).get("candidates", [])
     status = load(base / "collection_status.json", {})
@@ -66,7 +68,7 @@ def build(base, edition=None):
     collected_match = status.get("report_date") == iso
     generated_at = latest.get("generated_at")
     publishing_lag_minutes = None
-    if published and generated_at:
+    if published and generated_at and event_name == 'schedule':
         try:
             generated = dt.datetime.fromisoformat(generated_at.replace("Z", "+00:00"))
             if generated.tzinfo:
@@ -85,6 +87,7 @@ def build(base, edition=None):
         warnings.append("blocked_or_failed_sources_exist")
     result = {
         "schema_version": 1, "edition": iso, "timezone": "Asia/Shanghai",
+        "workflow_trigger": event_name,
         "published_report": {
             "available_for_edition": published,
             "generated_at": generated_at if published else None,
