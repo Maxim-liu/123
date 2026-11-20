@@ -57,9 +57,15 @@ class SourceAuditTest(unittest.TestCase):
         self.assertIn("blocked_or_failed_sources_exist", report["warnings"])
 
     def test_publication_lag_warning_without_modifying_schedule(self):
-        report = module.build(self.base)
+        report = module.build(self.base, event_name="schedule")
         self.assertGreater(report["published_report"]["lag_minutes_from_previous_day_21_bjt"], 90)
         self.assertIn("publication_more_than_90_minutes_after_21_bjt", report["warnings"])
+
+    def test_push_does_not_mislabel_refresh_as_delayed_schedule(self):
+        report = module.build(self.base, event_name="push")
+        self.assertEqual(report["workflow_trigger"], "push")
+        self.assertIsNone(report["published_report"]["lag_minutes_from_previous_day_21_bjt"])
+        self.assertNotIn("publication_more_than_90_minutes_after_21_bjt", report["warnings"])
 
     def test_duplicate_ids_fail_fast(self):
         path = self.base / "source_registry.json"
