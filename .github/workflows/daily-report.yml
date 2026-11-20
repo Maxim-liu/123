@@ -48,11 +48,17 @@ jobs:
           fi
           python bank_daily_setup/collect_offers.py "${args[@]}"
           python bank_daily_setup/generate_report.py "${args[@]}"
+      - name: Record source coverage audit (publication must continue on audit failure)
+        run: |
+          python bank_daily_setup/audit_sources.py || echo "::warning::Coverage audit failed; daily publication remains enabled"
       - name: Commit the report and actual collection state
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -- index.html latest.json bank_daily_setup/collection_status.json
+          if [ -d bank_daily_setup/audits ]; then
+            git add -- bank_daily_setup/audits/
+          fi
           if [ -f bank_daily_setup/collected_offers.json ]; then
             git add -- bank_daily_setup/collected_offers.json
           fi
