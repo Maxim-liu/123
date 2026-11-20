@@ -1,7 +1,7 @@
 name: Validate offer time views
 on:
   push:
-    branches: [feat/offer-time-and-chronological, fix/international-layout-overflow, feat/activity-entry-links, maintenance/2026-11-20-source-audit, fix/2026-11-20-audit-run-type, fix/2026-11-21-publication-recovery]
+    branches: [feat/offer-time-and-chronological, fix/international-layout-overflow, feat/activity-entry-links, maintenance/2026-11-20-source-audit, fix/2026-11-20-audit-run-type, fix/2026-11-21-publication-recovery, fix/2026-11-21-sync-edition-metadata]
   workflow_dispatch:
 permissions:
   contents: read
