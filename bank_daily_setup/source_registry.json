@@ -284,6 +284,149 @@
       "homepage": "https://www.reddit.com/r/ChaseSapphire/",
       "status": "pending_verification",
       "note": "入口候选，未核验可采集性；不能计入有效产出"
+    },
+    {
+      "id": "candidate_032",
+      "region": "us",
+      "category": "official",
+      "name": "Hilton Honors 官方优惠总览",
+      "homepage": "https://www.hilton.com/en/offers/",
+      "status": "public_page_found_robots_pending",
+      "note": "页面提供 Hilton Honors 2X Points、购分及合作伙伴优惠；活动条款逐条核对，robots与结构化日期未核验。",
+      "discovered_at": "2026-11-20",
+      "collection_approved": false
+    },
+    {
+      "id": "candidate_033",
+      "region": "us",
+      "category": "official",
+      "name": "IHG One Rewards 官方优惠入口",
+      "homepage": "https://www.ihg.com/content/us/en/offers",
+      "status": "public_page_found_robots_pending",
+      "note": "官方优惠与会员积分入口；动态加载和robots待实测。",
+      "discovered_at": "2026-11-20",
+      "collection_approved": false
+    },
+    {
+      "id": "candidate_034",
+      "region": "us",
+      "category": "official",
+      "name": "IHG 新会员首住3000积分",
+      "homepage": "https://www.ihg.com/content/us/en/deals/member-offers/new-member-3K-bonus",
+      "status": "public_page_found_robots_pending",
+      "note": "官方条款示例：2026年4月1日至12月31日登记期，需在指定入口新入会并完成符合条件的入住；仅为待核采集候选。",
+      "discovered_at": "2026-11-20",
+      "collection_approved": false
+    },
+    {
+      "id": "candidate_035",
+      "region": "us",
+      "category": "official",
+      "name": "IHG 定向两晚20000积分",
+      "homepage": "https://www.ihg.com/content/us/en/deals/member-offers/20k2n",
+      "status": "public_page_found_robots_pending",
+      "note": "官方条款明确限受邀会员，登记后60天内完成2个合格晚；不得冒充人人可参加。",
+      "discovered_at": "2026-11-20",
+      "collection_approved": false
+    },
+    {
+      "id": "candidate_036",
+      "region": "us",
+      "category": "official",
+      "name": "World of Hyatt 官网优惠总览",
+      "homepage": "https://world.hyatt.com/content/gp/en/offers.html",
+      "status": "public_page_found_robots_pending",
+      "note": "包括积分和住宿活动；索引中有历史到期内容，必须解析每活动的注册/入住期。",
+      "discovered_at": "2026-11-20",
+      "collection_approved": false
+    },
+    {
+      "id": "candidate_037",
+      "region": "us",
+      "category": "official",
+      "name": "Marriott Bonvoy 定向促销说明",
+      "homepage": "https://help.marriott.com/s/article/find-register-marriott-promotions",
+      "status": "login_required_for_personal_offers",
+      "note": "官方说明明确促销通常需登录、部分为定向，不能抓取私人促销或把说明页当优惠。",
+      "discovered_at": "2026-11-20",
+      "collection_approved": false
+    },
+    {
+      "id": "candidate_038",
+      "region": "us",
+      "category": "official",
+      "name": "ALL Accor 年终会员优惠",
+      "homepage": "https://all.accor.com/a/en/offers/private-sales-eoy-bonus-points.html",
+      "status": "public_page_found_robots_pending",
+      "note": "公开页面列折扣及部分会员定向积分；中国大陆预约窗口可能已过，先分区域核实。",
+      "discovered_at": "2026-11-20",
+      "collection_approved": false
+    },
+    {
+      "id": "candidate_039",
+      "region": "us",
+      "category": "official",
+      "name": "ALL Accor Emblems 双倍积分",
+      "homepage": "https://all.accor.com/a/en/offers/luxury/emblems-loyalty.html",
+      "status": "public_page_found_robots_pending",
+      "note": "官方披露2026年12月31日前入住可得2倍奖励积分；限参与酒店，需核验条件。",
+      "discovered_at": "2026-11-20",
+      "collection_approved": false
+    },
+    {
+      "id": "candidate_040",
+      "region": "us",
+      "category": "official",
+      "name": "United MileagePlus Travel 合作租车",
+      "homepage": "https://mileageplustravel.united.com/explore/car-rentals/oc",
+      "status": "public_page_found_robots_pending",
+      "note": "官方租车合作页面展示2026年12月31日前最高2750里程和联名卡TravelBank；需登录核验适用条件。",
+      "discovered_at": "2026-11-20",
+      "collection_approved": false
+    },
+    {
+      "id": "candidate_041",
+      "region": "hk",
+      "category": "official",
+      "name": "国泰航空官方新闻与推广线索",
+      "homepage": "https://news.cathaypacific.com/",
+      "status": "public_page_found_robots_pending",
+      "note": "官方新闻页可发现里数活动；2026年9月周年活动已过期，新闻发布日期不等于活动有效期。",
+      "discovered_at": "2026-11-20",
+      "collection_approved": false
+    },
+    {
+      "id": "candidate_042",
+      "region": "cn",
+      "category": "official",
+      "name": "东方万里行合作积分积累规则",
+      "homepage": "https://easternmiles.ceair.com/member/huiyuanshouce/app/parter-travel/partnerTravelThdc.html",
+      "status": "public_page_found_robots_pending",
+      "note": "官网公开积分活动规则，包含问卷调查及签到小额积分；需确认2026年11月现行规则与robots。",
+      "discovered_at": "2026-11-20",
+      "collection_approved": false
+    },
+    {
+      "id": "candidate_043",
+      "region": "us",
+      "category": "official",
+      "name": "Air Canada Aeroplan 优惠目录",
+      "homepage": "https://www.aircanada.com/content/aircanada/ca/en/aco/home/book/special-offers/aeroplan.html",
+      "status": "public_page_found_robots_pending",
+      "note": "搜索到的实例多已结束，目录页面可能有旧活动；须核查实时索引、新活动与地区可用性。",
+      "discovered_at": "2026-11-20",
+      "collection_approved": false
+    },
+    {
+      "id": "candidate_044",
+      "region": "hk",
+      "category": "official",
+      "name": "IHG 全球Cyber Sale活动页",
+      "homepage": "https://www.ihg.com/content/gb/en/deals/hotel-offers/cybersale",
+      "status": "public_page_found_robots_pending",
+      "note": "官网披露2026 Global Cyber Sale，活动跨多个区域；各地区、日期、积分条件需分开核验。",
+      "discovered_at": "2026-11-20",
+      "collection_approved": false
     }
   ]
 }
