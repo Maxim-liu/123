@@ -2,16 +2,16 @@
   "schema_version": 1,
   "edition": "2026-11-21",
   "timezone": "Asia/Shanghai",
-  "workflow_trigger": "push",
+  "workflow_trigger": "schedule",
   "published_report": {
     "available_for_edition": true,
-    "generated_at": "2026-11-21T01:02:35+08:00",
-    "lag_minutes_from_previous_day_21_bjt": null,
+    "generated_at": "2026-11-21T04:58:23+08:00",
+    "lag_minutes_from_previous_day_21_bjt": 478,
     "verified_count": 57,
     "unverified_count": 83,
     "regions": {
       "cn": {
-        "collected_count": 35,
+        "collected_count": 34,
         "verified_count": 37
       },
       "hk": {
@@ -19,7 +19,7 @@
         "verified_count": 13
       },
       "us": {
-        "collected_count": 29,
+        "collected_count": 30,
         "verified_count": 7
       }
     }
@@ -28,8 +28,8 @@
     "configured": 48,
     "candidate_registry": 44,
     "reachable": 30,
-    "producing": 17,
-    "empty": 13,
+    "producing": 15,
+    "empty": 15,
     "blocked": 10,
     "error": 8,
     "disabled": 0,
@@ -42,7 +42,6 @@
       "cn_cgb_promotions",
       "cn_citic_notices",
       "cn_ctrip_bankoffers",
-      "cn_flyer",
       "cn_psbc_debit",
       "cn_psbc_national",
       "cn_smzdm_yangmaocun",
@@ -50,7 +49,6 @@
       "hk_flyday",
       "hk_jetso101",
       "hk_timeline",
-      "us_awardwallet",
       "us_frequentmiler",
       "us_milestomemories",
       "us_uscardforum",
@@ -85,8 +83,8 @@
     "retained_after_failure": 7,
     "regions": {
       "cn": {
-        "total": 34,
-        "fresh": 34,
+        "total": 33,
+        "fresh": 33,
         "retained": 0
       },
       "hk": {
@@ -95,8 +93,8 @@
         "retained": 0
       },
       "us": {
-        "total": 23,
-        "fresh": 16,
+        "total": 24,
+        "fresh": 17,
         "retained": 7
       }
     }
@@ -109,6 +107,7 @@
     "notice": "Raw duplicates are review candidates, not counts of published duplicate offers."
   },
   "warnings": [
+    "publication_more_than_90_minutes_after_21_bjt",
     "blocked_or_failed_sources_exist"
   ]
 }
