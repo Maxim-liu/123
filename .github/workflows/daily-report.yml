@@ -14,6 +14,7 @@ on:
         type: string
   schedule:
     - cron: '0 13 * * *' # 21:00 Asia/Shanghai
+    - cron: '30 13 * * *' # 21:30 Asia/Shanghai recovery check
 
 permissions:
   contents: write
@@ -48,6 +49,20 @@ jobs:
           fi
           python bank_daily_setup/collect_offers.py "${args[@]}"
           python bank_daily_setup/generate_report.py "${args[@]}"
+      - name: Verify generated edition is not stale
+        env:
+          REQUESTED_REPORT_DATE: ${{ inputs.report_date }}
+        run: |
+          python - <<'PY'
+          import datetime as dt, json, os
+          from zoneinfo import ZoneInfo
+          edition = json.load(open('latest.json', encoding='utf-8'))['date']
+          now = dt.datetime.now(ZoneInfo('Asia/Shanghai'))
+          expected = os.getenv('REQUESTED_REPORT_DATE') or str(now.date() + dt.timedelta(days=now.hour >= 21))
+          if edition != expected:
+              raise SystemExit(f'Stale edition: {edition}; expected {expected}')
+          print('Edition freshness verified:', edition)
+          PY
       - name: Record source coverage audit (publication must continue on audit failure)
         run: |
           python bank_daily_setup/audit_sources.py || echo "::warning::Coverage audit failed; daily publication remains enabled"
