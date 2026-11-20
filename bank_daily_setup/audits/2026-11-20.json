@@ -4,33 +4,33 @@
   "timezone": "Asia/Shanghai",
   "published_report": {
     "available_for_edition": true,
-    "generated_at": "2026-11-20T05:15:56+08:00",
-    "lag_minutes_from_previous_day_21_bjt": 496,
-    "verified_count": 58,
-    "unverified_count": 77,
+    "generated_at": "2026-11-20T10:02:44+08:00",
+    "lag_minutes_from_previous_day_21_bjt": 783,
+    "verified_count": 62,
+    "unverified_count": 78,
     "regions": {
       "cn": {
-        "collected_count": 35,
-        "verified_count": 37
+        "collected_count": 36,
+        "verified_count": 38
       },
       "hk": {
         "collected_count": 17,
-        "verified_count": 13
+        "verified_count": 14
       },
       "us": {
         "collected_count": 25,
-        "verified_count": 8
+        "verified_count": 10
       }
     }
   },
   "registered_sources": {
     "configured": 48,
     "candidate_registry": 44,
-    "reachable": 30,
-    "producing": 14,
-    "empty": 16,
+    "reachable": 29,
+    "producing": 15,
+    "empty": 14,
     "blocked": 10,
-    "error": 8,
+    "error": 9,
     "disabled": 0,
     "candidate_states": {
       "login_required_for_personal_offers": 1,
@@ -41,8 +41,8 @@
       "cn_cgb_promotions",
       "cn_citic_notices",
       "cn_ctrip_bankoffers",
+      "cn_flyer",
       "cn_psbc_debit",
-      "cn_psbc_national",
       "cn_smzdm_yangmaocun",
       "hk_bochk",
       "hk_jetso101",
@@ -51,6 +51,7 @@
       "us_frequentmiler",
       "us_milestomemories",
       "us_uscardforum",
+      "us_uscardforum_html",
       "us_uscreditcardguide"
     ],
     "failed_ids": [
@@ -62,6 +63,7 @@
       "cn_ccb",
       "cn_cib_national",
       "cn_cmbc_notices",
+      "cn_psbc_national",
       "cn_yangmaocun",
       "cn_zuanke8",
       "hk_hangseng",
@@ -76,14 +78,14 @@
   },
   "raw_collection": {
     "edition_matches": true,
-    "total": 73,
-    "fresh": 66,
-    "retained_after_failure": 7,
+    "total": 74,
+    "fresh": 59,
+    "retained_after_failure": 15,
     "regions": {
       "cn": {
-        "total": 34,
-        "fresh": 34,
-        "retained": 0
+        "total": 35,
+        "fresh": 27,
+        "retained": 8
       },
       "hk": {
         "total": 17,
