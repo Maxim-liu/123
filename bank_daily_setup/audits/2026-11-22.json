@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "edition": "2026-11-22",
+  "timezone": "Asia/Shanghai",
+  "workflow_trigger": "schedule",
+  "published_report": {
+    "available_for_edition": true,
+    "generated_at": "2026-11-22T03:59:40+08:00",
+    "lag_minutes_from_previous_day_21_bjt": 420,
+    "verified_count": 57,
+    "unverified_count": 88,
+    "regions": {
+      "cn": {
+        "collected_count": 34,
+        "verified_count": 37
+      },
+      "hk": {
+        "collected_count": 19,
+        "verified_count": 13
+      },
+      "us": {
+        "collected_count": 35,
+        "verified_count": 7
+      }
+    }
+  },
+  "registered_sources": {
+    "configured": 48,
+    "candidate_registry": 44,
+    "reachable": 30,
+    "producing": 16,
+    "empty": 14,
+    "blocked": 10,
+    "error": 8,
+    "disabled": 0,
+    "candidate_states": {
+      "login_required_for_personal_offers": 1,
+      "pending_verification": 31,
+      "public_page_found_robots_pending": 12
+    },
+    "producing_ids": [
+      "cn_cgb_promotions",
+      "cn_citic_notices",
+      "cn_ctrip_bankoffers",
+      "cn_psbc_debit",
+      "cn_psbc_national",
+      "cn_smzdm_yangmaocun",
+      "hk_bochk",
+      "hk_flyday",
+      "hk_jetso101",
+      "hk_timeline",
+      "us_awardwallet",
+      "us_frequentmiler",
+      "us_milestomemories",
+      "us_uscardforum",
+      "us_uscardforum_html",
+      "us_uscreditcardguide"
+    ],
+    "failed_ids": [
+      "cn_51credit",
+      "cn_abc",
+      "cn_alipay",
+      "cn_baijiahao",
+      "cn_boc",
+      "cn_ccb",
+      "cn_cib_national",
+      "cn_cmbc_notices",
+      "cn_yangmaocun",
+      "cn_zuanke8",
+      "hk_hangseng",
+      "hk_moneyhero",
+      "hk_moneysmart",
+      "hk_mrmiles",
+      "us_amex",
+      "us_doc",
+      "us_reddit_churning",
+      "us_reddit_creditcards"
+    ]
+  },
+  "raw_collection": {
+    "edition_matches": true,
+    "total": 80,
+    "fresh": 73,
+    "retained_after_failure": 7,
+    "regions": {
+      "cn": {
+        "total": 33,
+        "fresh": 33,
+        "retained": 0
+      },
+      "hk": {
+        "total": 18,
+        "fresh": 18,
+        "retained": 0
+      },
+      "us": {
+        "total": 29,
+        "fresh": 22,
+        "retained": 7
+      }
+    }
+  },
+  "quality_checks": {
+    "raw_duplicate_title_bank_candidates": 0,
+    "raw_duplicate_url_candidates": 2,
+    "expired_curated_records_excluded_by_date": 1,
+    "expired_collected_records_excluded_by_date": 0,
+    "notice": "Raw duplicates are review candidates, not counts of published duplicate offers."
+  },
+  "warnings": [
+    "publication_more_than_90_minutes_after_21_bjt",
+    "blocked_or_failed_sources_exist"
+  ]
+}
