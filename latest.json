@@ -1,10 +1,10 @@
 {
-  "collected_at": "2026-11-22T20:13:34+00:00",
+  "collected_at": "2026-11-22T20:25:49+00:00",
   "collected_count": 83,
   "combined_lead_count": 1,
   "current_page_count": 0,
   "date": "2026-11-23",
-  "generated_at": "2026-11-23T04:13:55+08:00",
+  "generated_at": "2026-11-23T04:26:12+08:00",
   "regions": {
     "cn": {
       "collected_count": 35,
@@ -26,5 +26,5 @@
   "verified_count": 57,
   "window_end": "2026-11-23T23:59:59+08:00",
   "window_start": "2026-11-23T00:00:00+08:00",
-  "revision": "28aeb16258b2ba5cd55d"
+  "revision": "f0c9a0383a19ceb9a8bc"
 }

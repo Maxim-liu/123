@@ -5,8 +5,8 @@
   "workflow_trigger": "schedule",
   "published_report": {
     "available_for_edition": true,
-    "generated_at": "2026-11-23T04:13:55+08:00",
-    "lag_minutes_from_previous_day_21_bjt": 434,
+    "generated_at": "2026-11-23T04:26:12+08:00",
+    "lag_minutes_from_previous_day_21_bjt": 446,
     "verified_count": 57,
     "unverified_count": 83,
     "regions": {
@@ -28,10 +28,10 @@
     "configured": 48,
     "candidate_registry": 44,
     "reachable": 31,
-    "producing": 18,
-    "empty": 13,
-    "blocked": 9,
-    "error": 8,
+    "producing": 17,
+    "empty": 14,
+    "blocked": 10,
+    "error": 7,
     "disabled": 0,
     "candidate_states": {
       "login_required_for_personal_offers": 1,
@@ -51,7 +51,6 @@
       "hk_jetso101",
       "hk_timeline",
       "us_awardwallet",
-      "us_doc",
       "us_frequentmiler",
       "us_milestomemories",
       "us_uscardforum",
@@ -60,7 +59,6 @@
     ],
     "failed_ids": [
       "cn_51credit",
-      "cn_abc",
       "cn_alipay",
       "cn_baijiahao",
       "cn_boc",
@@ -74,6 +72,7 @@
       "hk_moneysmart",
       "hk_mrmiles",
       "us_amex",
+      "us_doc",
       "us_reddit_churning",
       "us_reddit_creditcards"
     ]
@@ -81,8 +80,8 @@
   "raw_collection": {
     "edition_matches": true,
     "total": 73,
-    "fresh": 73,
-    "retained_after_failure": 0,
+    "fresh": 70,
+    "retained_after_failure": 3,
     "regions": {
       "cn": {
         "total": 34,
@@ -96,8 +95,8 @@
       },
       "us": {
         "total": 21,
-        "fresh": 21,
-        "retained": 0
+        "fresh": 18,
+        "retained": 3
       }
     }
   },
