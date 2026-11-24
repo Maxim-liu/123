@@ -5,8 +5,8 @@
   "workflow_trigger": "schedule",
   "published_report": {
     "available_for_edition": true,
-    "generated_at": "2026-11-25T06:57:14+08:00",
-    "lag_minutes_from_previous_day_21_bjt": 597,
+    "generated_at": "2026-11-25T07:09:08+08:00",
+    "lag_minutes_from_previous_day_21_bjt": 609,
     "verified_count": 57,
     "unverified_count": 81,
     "regions": {
@@ -28,8 +28,8 @@
     "configured": 48,
     "candidate_registry": 44,
     "reachable": 30,
-    "producing": 15,
-    "empty": 15,
+    "producing": 14,
+    "empty": 16,
     "blocked": 10,
     "error": 8,
     "disabled": 0,
@@ -52,7 +52,6 @@
       "us_awardwallet",
       "us_frequentmiler",
       "us_uscardforum",
-      "us_uscardforum_html",
       "us_uscreditcardguide"
     ],
     "failed_ids": [
