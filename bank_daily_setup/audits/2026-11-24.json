@@ -5,8 +5,8 @@
   "workflow_trigger": "schedule",
   "published_report": {
     "available_for_edition": true,
-    "generated_at": "2026-11-24T08:39:39+08:00",
-    "lag_minutes_from_previous_day_21_bjt": 700,
+    "generated_at": "2026-11-24T09:04:03+08:00",
+    "lag_minutes_from_previous_day_21_bjt": 724,
     "verified_count": 57,
     "unverified_count": 81,
     "regions": {
