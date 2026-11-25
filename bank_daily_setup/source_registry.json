@@ -427,6 +427,42 @@
       "note": "官网披露2026 Global Cyber Sale，活动跨多个区域；各地区、日期、积分条件需分开核验。",
       "discovered_at": "2026-11-20",
       "collection_approved": false
+    },
+    {
+      "id": "candidate_wechat_1",
+      "region": "cn",
+      "category": "community",
+      "name": "今日羊毛速报",
+      "platform": "微信公众号",
+      "homepage": null,
+      "status": "pending_identity_and_public_article_verification",
+      "note": "用户指定候选；待核实公众号主体、公开原文及采集许可，不猜测文章链接。",
+      "discovered_at": "2026-11-25",
+      "collection_approved": false
+    },
+    {
+      "id": "candidate_wechat_2",
+      "region": "cn",
+      "category": "community",
+      "name": "玩卡薅羊毛",
+      "platform": "微信公众号",
+      "homepage": null,
+      "status": "pending_identity_and_public_article_verification",
+      "note": "用户指定候选；待核实公众号主体、公开原文及采集许可，不猜测文章链接。",
+      "discovered_at": "2026-11-25",
+      "collection_approved": false
+    },
+    {
+      "id": "candidate_wechat_3",
+      "region": "cn",
+      "category": "community",
+      "name": "羊毛优惠",
+      "platform": "微信公众号",
+      "homepage": null,
+      "status": "pending_identity_and_public_article_verification",
+      "note": "用户指定候选；待核实公众号主体、公开原文及采集许可，不猜测文章链接。",
+      "discovered_at": "2026-11-25",
+      "collection_approved": false
     }
   ]
 }
