@@ -551,7 +551,50 @@ def all_section(region, name, items, day):
     return content + '</section>'
 
 
+def render_cn_digest(items, leads, day):
+    reminders, daily, special = [], [], []
+    for item in items:
+        start, end = valid_date(item.get('start_date')), valid_date(item.get('end_date'))
+        labels = []
+        if start == day:
+            labels.append('今日开始')
+        if end and 0 <= (end - day).days <= 3:
+            labels.append('即将截止 ' + end.isoformat())
+        if labels:
+            reminders.append((item, ' · '.join(labels)))
+        if highlight_kind(item, day) or not (activity_time(item) or item.get('weekdays') or item.get('month_days')):
+            special.append(item)
+        else:
+            daily.append(item)
+    out = '<section class="card cn-digest" id="today"><h2>提醒</h2>'
+    for item, label in reminders:
+        out += f'<p class="cn-reminder"><b>{h(label)} · {h(item.get("bank"))}</b>：<a href="#{offer_anchor(item)}">{h(item["title"])}</a></p>'
+    if not reminders:
+        out += '<p class="empty">暂无已核实的近期提醒。</p>'
+    out += '</section><section class="card cn-digest" id="all"><h2>日常活动</h2><div class="table-scroll"><table class="cn-daily"><thead><tr><th>银行</th><th>时间</th><th>活动及参与方式</th></tr></thead>'
+    groups = {}
+    for item in sorted(daily, key=lambda x: (str(x.get('bank') or ''), activity_time(x) or '99:99', x['title'])):
+        groups.setdefault(item.get('bank') or '其他平台', []).append(item)
+    for bank, group in groups.items():
+        out += '<tbody>'
+        for i, item in enumerate(group):
+            out += f'<tr id="{offer_anchor(item)}">'
+            if i == 0:
+                out += f'<th scope="rowgroup" rowspan="{len(group)}">{h(bank)}</th>'
+            out += f'<td class="time-cell">{h(display_activity_time(item))}</td><td><b>{h(item["title"])}</b>{reward_html(item)}<div>{h(period_label(item))} · {h(item.get("channel"))} {source_link(item)}</div></td></tr>'
+        out += '</tbody>'
+    out += '</table></div></section><section class="card cn-digest" id="miles"><h2>特别活动</h2>'
+    for item, community in [(x, False) for x in special] + [(x, True) for x in leads]:
+        out += f'<article class="cn-special" id="{offer_anchor(item)}"><h3>{h(item.get("bank"))} · {h(item["title"])}</h3>'
+        if community:
+            out += '<b class="cn-unverified">待核实线索</b>'
+        out += reward_html(item) + f'<p>{h(period_label(item, not community))} · {h(item.get("channel"))} {source_link(item, community)}</p></article>'
+    return out + '</section>'
+
+
 def render_region(region, name, items, leads, day):
+    if region == 'cn':
+        return render_cn_digest(items, leads, day)
     prefix = '' if region == 'cn' else region + '-'
     today = today_items(items, day)
     deadlines = sorted([item for item in items if valid_date(item.get('end_date'))],
