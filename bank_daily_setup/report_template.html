@@ -166,7 +166,7 @@ body{background:linear-gradient(145deg,#f1f6fd 0%,#f8fafc 48%,#eef3f9 100%);colo
 .activity-entry:hover{background:#d9eafb}
 .source-link{display:inline-block;max-width:100%;overflow-wrap:anywhere}
 .entry-channel{display:block;margin-bottom:6px;overflow-wrap:anywhere}
-</style><link href="./manifest.webmanifest" rel="manifest"/><link href="./icons/icon-192.png" rel="apple-touch-icon"/><meta content="#132c50" name="theme-color"/><meta content="yes" name="apple-mobile-web-app-capable"/><meta content="default" name="apple-mobile-web-app-status-bar-style"/><meta content="银行线报" name="apple-mobile-web-app-title"/><meta content="中港美银行信用卡、里程、稀缺活动及高价值活动每日线报" name="description"/></head><body><main class="wrap"><header class="top">
+.cn-digest{min-width:0}.cn-digest>h2{justify-content:center;color:#a34713}.cn-reminder{margin:8px 0;padding:5px 0;border-bottom:1px solid #eee}.cn-reminder b,.cn-special h3,.cn-unverified{color:#c33}.cn-special{padding:10px 0;border-bottom:1px solid #ddd;overflow-wrap:anywhere}.cn-special h3{font-size:14px;margin:0 0 5px}.cn-special p{margin:5px 0}.cn-digest#all table.cn-daily{min-width:340px;width:100%;table-layout:fixed}.cn-daily th:first-child{width:19%}.cn-daily th:nth-child(2){width:17%}.cn-daily tbody th{position:static;background:#eee;color:#333}.cn-daily td,.cn-daily th{padding:6px;overflow-wrap:anywhere}.cn-daily .time-cell{color:#c33}@media(max-width:520px){.cn-digest.card{padding:10px}.cn-daily td,.cn-daily th{font-size:12px;padding:4px}}</style><link href="./manifest.webmanifest" rel="manifest"/><link href="./icons/icon-192.png" rel="apple-touch-icon"/><meta content="#132c50" name="theme-color"/><meta content="yes" name="apple-mobile-web-app-capable"/><meta content="default" name="apple-mobile-web-app-status-bar-style"/><meta content="银行线报" name="apple-mobile-web-app-title"/><meta content="中港美银行信用卡、里程、稀缺活动及高价值活动每日线报" name="description"/></head><body><main class="wrap"><header class="top">
 <h1>银行 &amp; 里程活动日报 · 全球三区</h1>
 <div class="sub"></div>
 
@@ -176,7 +176,7 @@ function show(region){
   if(!['cn','hk','us'].includes(region))return;
   tabs.forEach(button=>{const active=button.dataset.region===region;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1});
   document.querySelectorAll('.region-panel').forEach(panel=>panel.hidden=panel.id!=='region-'+region);
-  document.querySelectorAll('nav.quick-nav [data-section]').forEach(link=>{link.href='#'+(region==='cn'?'':region+'-')+link.dataset.section;if(link.dataset.section==='today')link.textContent=region==='cn'?'今日必抢':'今日必看'});
+  document.querySelectorAll('nav.quick-nav [data-section]').forEach(link=>{link.href='#'+(region==='cn'?'':region+'-')+link.dataset.section;link.hidden=region==='cn'&&link.dataset.section==='deadlines';const labels=region==='cn'?{today:'提醒',all:'日常活动',miles:'特别活动'}:{today:'今日必看',all:'全部活动',miles:'里程积分',deadlines:'截止日历'};link.textContent=labels[link.dataset.section]||''});
 }
 function top(){window.scrollTo({top:0,left:0,behavior:'instant'})}
 function selectRegion(region){
