@@ -460,9 +460,10 @@
       "platform": "微信公众号",
       "homepage": null,
       "status": "pending_identity_and_public_article_verification",
-      "note": "用户指定候选；待核实公众号主体、公开原文及采集许可，不猜测文章链接。",
+      "note": "用户指定候选；待核实公众号主体、公开原文及采集许可，不猜测文章链接。 用户提供文章样本；当前网页读取失败，未核验文章内容或采集许可。",
       "discovered_at": "2026-11-25",
-      "collection_approved": false
+      "collection_approved": false,
+      "sample_article_url": "https://mp.weixin.qq.com/s/R4TDzs17CIhXO6ZdVYh46w"
     }
   ]
 }
